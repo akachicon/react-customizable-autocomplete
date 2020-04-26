@@ -1,0 +1,22 @@
+// This file will be inlined into html. Specified urls
+// matching 'fontsPreloadRegex' from project.config.js
+// will be linked with preload attribute. Full versions
+// of the fonts will be loaded after initial render via
+// javascript (see bootstrap.js). For other fonts in the
+// app either font synthesis or fallback font will be used
+// until full versions of fonts are downloaded.
+
+@font-face {
+  font-family: 'Open Sans';
+  font-weight: 700;
+  src: url(~@fonts/open-sans/OpenSans-Bold-latin.woff2) format('woff2'),
+    url(~@fonts/open-sans/OpenSans-Bold-latin.woff) format('woff');
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Open Sans';
+  font-weight: 400;
+  src: url(~@fonts/open-sans/OpenSans-Regular-latin.woff2) format('woff2'),
+    url(~@fonts/open-sans/OpenSans-Regular-latin.woff) format('woff');
+  font-display: swap;
+}

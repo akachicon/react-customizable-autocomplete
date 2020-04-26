@@ -1,0 +1,20 @@
+{
+  "include": [],
+  "files": [],
+  "exclude": [
+    "node_modules"
+  ],
+  "references": [
+    {
+      "path": "src/client/composite.app.tsconfig.json"
+    },
+    {
+      "path": "src/client/composite.test.tsconfig.json"
+    }
+  ],
+  "compilerOptions": {
+    "incremental": true,
+    "composite": true,
+    "tsBuildInfoFile": "node_modules/.cache/ts-build-info/solution"
+  }
+}

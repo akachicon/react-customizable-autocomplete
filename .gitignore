@@ -1,0 +1,13 @@
+/node_modules/
+/dist/
+/ssl/**/*.key
+/ssl/**/*.pem
+/ssl/**/*.srl
+/ssl/**/*.crt
+/ssl/**/*.csr
+/src/client/app/**/*.d.ts
+/.idea/
+/logs
+*.log
+npm-debug.log*
+*.report.html

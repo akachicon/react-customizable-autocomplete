@@ -1,0 +1,52 @@
+{
+  "include": [
+    "declarations/**/*.d.ts",
+    "**/*.spec.ts",
+    "**/*.spec.tsx",
+    "**/*.d.ts"
+  ],
+  "references": [
+    {
+      "path": "/home/akachicon/projects/webpack/webpack-react-spa/src/client/composite.app.tsconfig.json"
+    }
+  ],
+  "compilerOptions": {
+    "incremental": true,
+    "composite": true,
+    "emitDeclarationOnly": true,
+    "isolatedModules": true,
+    "jsx": "preserve",
+    "lib": [
+      "dom",
+      "dom.iterable",
+      "esnext"
+    ],
+    "moduleResolution": "node",
+    "strict": true,
+    "allowSyntheticDefaultImports": true,
+    "baseUrl": "../..",
+    "paths": {
+      "@/*": [
+        "src/client/*"
+      ],
+      "@app/*": [
+        "src/client/app/*"
+      ],
+      "@styles/*": [
+        "src/client/assets/styles/*"
+      ],
+      "@fonts/*": [
+        "src/client/assets/fonts/*"
+      ],
+      "@images/*": [
+        "src/client/assets/images/*"
+      ]
+    },
+    "typeRoots": [
+      "../../node_modules/@types"
+    ],
+    "forceConsistentCasingInFileNames": true,
+    "resolveJsonModule": true,
+    "tsBuildInfoFile": "../../node_modules/.cache/ts-build-info/test"
+  }
+}
