@@ -1,10 +1,15 @@
 import React from 'react';
+import AutoCompleteSearch from '@app/components/common/autocomplete-search';
 import stl from './app.scss';
 
 function App(): JSX.Element {
   return (
     <>
-      <div className={stl.app}>Welcome to react world, hot!</div>
+      <AutoCompleteSearch
+        label="search"
+        name="github-company-search"
+        onSubmit={() => console.log('passed onSubmit called')}
+      />
     </>
   );
 }

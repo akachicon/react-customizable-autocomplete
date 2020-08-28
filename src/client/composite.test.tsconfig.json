@@ -7,7 +7,7 @@
   ],
   "references": [
     {
-      "path": "/home/akachicon/projects/webpack/webpack-react-spa/src/client/composite.app.tsconfig.json"
+      "path": "/home/akachicon/projects/test-tasks/zigmund.online_middle/src/client/composite.app.tsconfig.json"
     }
   ],
   "compilerOptions": {
