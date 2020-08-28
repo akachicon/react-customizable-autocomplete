@@ -14,6 +14,7 @@ export default function AutoCompleteSearch({
   onSubmit,
 }: Props): JSX.Element {
   const [inputVal, setInputVal] = useState('');
+  const [loader, setLoader] = useState(false);
   const inputRef = useRef<HTMLInputElement | null>(null);
 
   const onChange = useCallback(
@@ -25,6 +26,7 @@ export default function AutoCompleteSearch({
   const onFormSubmit = useCallback(
     function onFormSubmit(e: React.FormEvent<HTMLFormElement>) {
       e.preventDefault();
+      setLoader(false);
       onSubmit();
     },
     [onSubmit]
@@ -43,6 +45,7 @@ export default function AutoCompleteSearch({
           autoComplete="off"
         />
       </label>
+      {loader && <span>loading</span>}
     </form>
   );
 }
