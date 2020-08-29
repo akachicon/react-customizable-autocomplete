@@ -29,9 +29,13 @@ const cacheDir = join(baseDir, 'node_modules', '.cache');
 
 const assetDirJoin = (...files) => join(assetDir, ...files);
 
+const appDir = join(clientDir, 'app');
+const libDir = join(appDir, 'lib');
+
 const pathAliases = {
   '@': clientDir,
-  '@app': join(clientDir, 'app'),
+  '@app': appDir,
+  '@lib': libDir,
   '@styles': assetDirJoin('styles'),
   '@fonts': assetDirJoin('fonts'),
   '@images': assetDirJoin('images'),

@@ -8,6 +8,7 @@ function App(): JSX.Element {
       <AutoCompleteSearch
         label="search"
         name="github-company-search"
+        onQuery={() => Promise.resolve([])}
         onSubmit={() => console.log('passed onSubmit called')}
       />
     </>

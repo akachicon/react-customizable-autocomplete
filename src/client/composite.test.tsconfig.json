@@ -32,6 +32,9 @@
       "@app/*": [
         "src/client/app/*"
       ],
+      "@lib/*": [
+        "src/client/app/lib/*"
+      ],
       "@styles/*": [
         "src/client/assets/styles/*"
       ],
