@@ -31,11 +31,13 @@ const assetDirJoin = (...files) => join(assetDir, ...files);
 
 const appDir = join(clientDir, 'app');
 const libDir = join(appDir, 'lib');
+const constantsDir = join(appDir, 'constants');
 
 const pathAliases = {
   '@': clientDir,
   '@app': appDir,
   '@lib': libDir,
+  '@constants': constantsDir,
   '@styles': assetDirJoin('styles'),
   '@fonts': assetDirJoin('fonts'),
   '@images': assetDirJoin('images'),

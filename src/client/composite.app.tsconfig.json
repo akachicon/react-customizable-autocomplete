@@ -30,6 +30,9 @@
       "@lib/*": [
         "src/client/app/lib/*"
       ],
+      "@constants/*": [
+        "src/client/app/constants/*"
+      ],
       "@styles/*": [
         "src/client/assets/styles/*"
       ],
