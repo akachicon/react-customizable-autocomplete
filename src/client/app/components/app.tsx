@@ -4,28 +4,15 @@ import stl from './app.scss';
 
 const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 const transformDataIntoText = (t: string) => t;
-const getRandomSuggestions = (seed = Math.floor(Math.random() * 100)) => [
-  {
-    id: `${seed + 1}`,
-    data: `id-${seed + 1}`,
-    transformDataIntoText,
-  },
-  {
-    id: `${seed + 2}`,
-    data: `id-${seed + 2}`,
-    transformDataIntoText,
-  },
-  {
-    id: `${seed + 3}`,
-    data: `id-${seed + 3}`,
-    transformDataIntoText,
-  },
-  {
-    id: `${seed + 4}`,
-    data: `id-${seed + 4}`,
-    transformDataIntoText,
-  },
-];
+const getRandomSuggestions = (seed = Math.floor(Math.random() * 100)) =>
+  Array(8)
+    .join('x')
+    .split('')
+    .map((x, i) => ({
+      id: `${seed + i}`,
+      data: `id-${seed + i}`,
+      transformDataIntoText,
+    }));
 const onQuery = () => delay(200).then(() => getRandomSuggestions());
 
 function App(): JSX.Element {
@@ -42,6 +29,7 @@ function App(): JSX.Element {
           console.log('query becomes obsolete')
         }
         onSubmit={() => console.log('passed onSubmit called')}
+        suggestionsLimit={7}
       />
     </>
   );

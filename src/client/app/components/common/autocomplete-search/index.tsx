@@ -1,69 +1,17 @@
-import React, {
-  useState,
-  useRef,
-  useCallback,
-  useEffect,
-  useMemo,
-} from 'react';
+import React, { useState, useRef, useCallback, useEffect } from 'react';
+import type {
+  AutocompleteSearchProps,
+  SuggestionResult,
+  OnQueryReturnPromise,
+} from './lib/types/autocomplete-search-props';
 import SuggestionDefaultComp from './suggestion';
 import NoResultsDefaultComp from './no-search-results';
 import QueryErrorDefaultComp from './query-error';
 import MinCharsRequiredDefaultComp from './min-chars-required';
 import { keys } from '@constants/keyboard';
+import useSuggestionContainerContent from './lib/hooks/use-suggestion-container-content';
 
 const { ARROW_UP, ARROW_DOWN, ESCAPE } = keys;
-
-/* eslint-disable @typescript-eslint/no-explicit-any */
-export type SuggestionResult<SuggestionData = any> = {
-  id: string;
-  data: SuggestionData;
-
-  // This is used to insert a suggestion's text in the input
-  // after a user enters/clicks on it.
-  transformDataIntoText: (data: SuggestionData) => string;
-};
-
-export type onQueryReturnPromise<SuggestionData = any> = Promise<
-  SuggestionResult<SuggestionData>[]
->;
-
-export type SuggestionComponentProps<SuggestionData = any> = {
-  selected: boolean;
-  data: SuggestionData;
-};
-
-export type SuggestionComponent<SuggestionData = any> = (
-  props: SuggestionComponentProps<SuggestionData>
-) => JSX.Element;
-/* eslint-enable @typescript-eslint/no-explicit-any */
-
-export type NoSearchResultsComponent = (props: { text: string }) => JSX.Element;
-export type QueryErrorComponent = (props: { text: string }) => JSX.Element;
-export type MinCharsRequiredComponent = (props: {
-  text: string;
-}) => JSX.Element;
-export type LoaderComponent = () => JSX.Element;
-
-export type Props<SuggestionData> = {
-  label: string;
-  name?: string;
-  onQuery: (query: string) => onQueryReturnPromise<SuggestionData>;
-  onQueryBecomesObsolete?: (queryPromise: onQueryReturnPromise) => void;
-  onSubmit: () => void;
-  debounceMs?: number;
-  suggestionsLimit?: number;
-  suggestionComponent?: SuggestionComponent<SuggestionData>;
-  noResultsComponent?: NoSearchResultsComponent;
-  noResultsMessage?: string;
-  queryErrorComponent?: QueryErrorComponent;
-  queryErrorMessage?: string;
-  minCharsRequired?: number;
-  minCharsRequiredComponent?: MinCharsRequiredComponent;
-  minCharsRequiredMessage?: string;
-  loaderComponent?: LoaderComponent;
-  showLoader?: boolean;
-  blurOnSubmit?: boolean;
-};
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export default function AutoCompleteSearch<SuggestionData = any>({
@@ -83,7 +31,7 @@ export default function AutoCompleteSearch<SuggestionData = any>({
   minCharsRequiredComponent = MinCharsRequiredDefaultComp,
   minCharsRequiredMessage = 'Start typing to see suggestions',
   blurOnSubmit = true,
-}: Props<SuggestionData>): JSX.Element {
+}: AutocompleteSearchProps<SuggestionData>): JSX.Element {
   // TODO: use refs wherever possible to optimize
 
   const [inputVal, setInputVal] = useState('');
@@ -101,8 +49,8 @@ export default function AutoCompleteSearch<SuggestionData = any>({
   const [showQueryError, setShowQueryError] = useState(false);
 
   const inputRef = useRef<HTMLInputElement | null>(null);
-  const currentQuery = useRef<onQueryReturnPromise | null>(null);
-  const queryTimestamps = useRef(new Map<onQueryReturnPromise, number>());
+  const currentQuery = useRef<OnQueryReturnPromise | null>(null);
+  const queryTimestamps = useRef(new Map<OnQueryReturnPromise, number>());
   const latestResolvedQueryTimestamp = useRef(0);
 
   const debouncedInputValLength = debouncedInputVal.trim().length;
@@ -369,65 +317,24 @@ export default function AutoCompleteSearch<SuggestionData = any>({
     ]
   );
 
-  // TODO: separate to use several useMemo, then debouncedInputVal
-  //  won't trigger suggestions rerender.
-  const containerComp = useMemo(
-    function calcContainerComp() {
-      const minCharsCheckPassed = debouncedInputValLength >= minCharsRequired;
-      const C = {
-        minCharsRequiredComponent,
-        queryErrorComponent,
-        suggestionComponent,
-        noResultsComponent,
-      };
+  const containerContent = useSuggestionContainerContent<SuggestionData>({
+    minCharsRequired,
+    minCharsRequiredMessage,
+    minCharsRequiredComponent,
+    queryErrorMessage,
+    queryErrorComponent,
+    suggestionComponent,
+    noResultsMessage,
+    noResultsComponent,
+    suggestions,
+    suggestionsExist,
+    suggestionsHaveLength,
+    selectedSuggestionId,
+    showQueryError,
+    debouncedInputValLength,
+  });
 
-      if (!minCharsCheckPassed) {
-        return <C.minCharsRequiredComponent text={minCharsRequiredMessage} />;
-      }
-      if (showQueryError) {
-        return <C.queryErrorComponent text={queryErrorMessage} />;
-      }
-      if (suggestionsExist && suggestionsHaveLength) {
-        // TODO: use some cache
-        return (
-          <>
-            {/* Due to suggestionsExist we will never get null value in suggestions */}
-            {/* eslint-disable-next-line @typescript-eslint/no-non-null-assertion */}
-            {suggestions!.map((s) => (
-              <C.suggestionComponent
-                key={s.id}
-                data={s.data}
-                selected={s.id === selectedSuggestionId}
-              />
-            ))}
-          </>
-        );
-      }
-      if (suggestionsExist && !suggestionsHaveLength) {
-        return <C.noResultsComponent text={noResultsMessage} />;
-      }
-
-      // The case where we are past min chars but
-      // the query is not resolved/rejected.
-      return <C.minCharsRequiredComponent text={minCharsRequiredMessage} />;
-    },
-    [
-      minCharsRequired,
-      minCharsRequiredMessage,
-      minCharsRequiredComponent,
-      queryErrorMessage,
-      queryErrorComponent,
-      suggestionComponent,
-      noResultsMessage,
-      noResultsComponent,
-      suggestions,
-      suggestionsExist,
-      suggestionsHaveLength,
-      selectedSuggestionId,
-      showQueryError,
-      debouncedInputValLength,
-    ]
-  );
+  // console.log(containerContent);
 
   return (
     <form onSubmit={onFormSubmit}>
@@ -445,7 +352,7 @@ export default function AutoCompleteSearch<SuggestionData = any>({
         />
       </label>
       {isFetching && <span>fetching suggestions</span>}
-      {showContainer && <div>{containerComp}</div>}
+      {showContainer && <div>{containerContent}</div>}
     </form>
   );
 }
