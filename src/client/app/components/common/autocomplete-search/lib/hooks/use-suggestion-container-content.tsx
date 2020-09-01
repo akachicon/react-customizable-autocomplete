@@ -1,6 +1,8 @@
 import { useMemo } from 'react';
-import type { AutocompleteSearchProps } from '../types/autocomplete-search-props';
-import { SuggestionResult } from '../types/autocomplete-search-props';
+import type {
+  AutocompleteSearchProps,
+  SuggestionResult,
+} from '../types/autocomplete-search-props';
 import useIdentPropsCache from './use-ident-props-cache';
 import useSuggestionList from './use-suggestion-list';
 

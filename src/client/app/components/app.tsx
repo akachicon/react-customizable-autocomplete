@@ -5,7 +5,7 @@ import stl from './app.scss';
 const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 const transformDataIntoText = (t: string) => t;
 const getRandomSuggestions = (seed = Math.floor(Math.random() * 100)) =>
-  Array(8)
+  Array(10)
     .join('x')
     .split('')
     .map((x, i) => ({
@@ -29,7 +29,6 @@ function App(): JSX.Element {
           console.log('query becomes obsolete')
         }
         onSubmit={() => console.log('passed onSubmit called')}
-        suggestionsLimit={7}
       />
     </>
   );

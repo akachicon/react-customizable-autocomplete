@@ -51,14 +51,6 @@ export default function useSuggestionList<SuggestionData = any>({
         data,
         selected,
       });
-
-      console.log(
-        'cache returned id',
-        id,
-        '; cache partition - ',
-        cachePartitionName
-      );
-
       return (cachePartition[id] = selectedSuggestion);
     },
     [Suggestion]
