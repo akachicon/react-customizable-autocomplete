@@ -22,11 +22,12 @@ type Dependencies<SuggestionData = any> = Pick<
   setSelectedSuggestionId: (id: string | null) => unknown;
   setPerceivedInputVal: (val: string) => unknown;
   setIsFetching: (isFetching: boolean) => unknown;
+  attemptSubmit: () => void;
 };
 
 type OnKeyDownCallback = React.KeyboardEventHandler<HTMLInputElement>;
 
-const { ARROW_UP, ARROW_DOWN, ESCAPE } = keys;
+const { ARROW_UP, ARROW_DOWN, ESCAPE, ENTER } = keys;
 
 export default function useOnKeyDown<SuggestionData>({
   onQueryBecomesObsolete,
@@ -39,6 +40,7 @@ export default function useOnKeyDown<SuggestionData>({
   setSelectedSuggestionId,
   setPerceivedInputVal,
   setIsFetching,
+  attemptSubmit,
 }: Dependencies<SuggestionData>): OnKeyDownCallback {
   const suggestions = useBoundRef<Dependencies['suggestions']>(suggestionsDep);
   const selectedSuggestionId = useBoundRef(suggestedSelectionIdDep);
@@ -159,7 +161,9 @@ export default function useOnKeyDown<SuggestionData>({
 
   return useCallback(
     function onKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
-      const shouldHandle = [ARROW_DOWN, ARROW_UP, ESCAPE].includes(e.key);
+      const shouldHandle = [ARROW_DOWN, ARROW_UP, ESCAPE, ENTER].includes(
+        e.key
+      );
       if (!shouldHandle) return;
       e.preventDefault();
 
@@ -175,8 +179,12 @@ export default function useOnKeyDown<SuggestionData>({
         case ARROW_UP:
           handleArrowUp();
           break;
+
+        case ENTER:
+          attemptSubmit();
+          break;
       }
     },
-    [handleEscape, handleArrowDown, handleArrowUp]
+    [handleEscape, handleArrowDown, handleArrowUp, attemptSubmit]
   );
 }

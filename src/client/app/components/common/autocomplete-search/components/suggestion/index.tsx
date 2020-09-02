@@ -6,8 +6,13 @@ const Suggestion: SuggestionComponent<unknown> = ({
   selected,
   data,
   onMouseOver,
+  onMouseDown,
 }) => (
-  <div onMouseOver={onMouseOver} data-autocomplete-search={id}>
+  <div
+    onMouseOver={onMouseOver}
+    onMouseDown={onMouseDown}
+    data-autocomplete-search={id}
+  >
     {data}, selected: {selected ? 'true' : 'false'}
   </div>
 );

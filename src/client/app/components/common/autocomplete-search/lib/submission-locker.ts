@@ -17,7 +17,7 @@ import type {
 //
 // - when a user uses pointer to submit:
 //    At the time the correct input value (corresponding to a submission
-//    item) isn't yet set to the field, so the onCLick handler triggers
+//    item) isn't yet set to the field, so the onMouseDown handler triggers
 //    setting new perceived input, which is async, and sets a lock. This
 //    change is being listened in onPointerSubmission effect, which checks
 //    if the locker is locked and if a pointer was an initiator of the lock.

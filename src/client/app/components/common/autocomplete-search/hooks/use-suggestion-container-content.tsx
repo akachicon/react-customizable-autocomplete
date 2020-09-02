@@ -23,6 +23,7 @@ type Dependencies<SuggestionData = any> = Pick<
   showQueryError: boolean;
   debouncedInputValLength: number;
   setSelectedSuggestionId: (id: string) => unknown;
+  attemptSubmit: (text: string) => void;
 };
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -40,12 +41,14 @@ export default function useSuggestionContainerContent<SuggestionData = any>({
   setSelectedSuggestionId,
   showQueryError,
   debouncedInputValLength,
+  attemptSubmit,
 }: Dependencies<SuggestionData>): JSX.Element {
   const getCachedOnProps = useIdentPropsCache();
   const getSuggestionList = useSuggestionList<SuggestionData>({
     suggestions,
     Suggestion,
     setSelectedSuggestionId,
+    attemptSubmit,
   });
 
   const minCharsCheckPassed = useMemo(

@@ -44,24 +44,13 @@ export default function AutoCompleteSearch<SuggestionData = any>({
   >(null);
   const [showQueryError, setShowQueryError] = useState(false);
 
+  const form = useRef<HTMLFormElement | null>(null);
   const input = useRef<HTMLInputElement | null>(null);
   const currentQuery = useRef<OnQueryReturnPromise | null>(null);
   const queryTimestamps = useRef(new Map<OnQueryReturnPromise, number>());
   const latestResolvedQueryTimestamp = useRef(0);
   const submissionLocker = useRef(new SubmissionLocker());
   const suggestionsExist = useRef(false);
-
-  const setSelectedIdWithKeyboard = useRef(function setSelectedIdWithKey(
-    id: string
-  ) {
-    submissionLocker.current.lastKeyboardSelectedId = id;
-  });
-
-  const setSelectedIdWithPointer = useRef(function setSelectedIdWithKey(
-    id: string
-  ) {
-    submissionLocker.current.lastPointerSelectedId = id;
-  });
 
   const debouncedInputValLength = debouncedInputVal.trim().length;
   suggestionsExist.current = suggestions !== null;
@@ -127,6 +116,23 @@ export default function AutoCompleteSearch<SuggestionData = any>({
     [onQuery, onQueryBecomesObsolete, suggestionsLimit]
   );
 
+  const onKeyDownSubmit = useCallback(function onKeyDownSubmit() {
+    const shouldContinue = submissionLocker.current.lock('keyboard');
+    if (shouldContinue) {
+      form.current?.dispatchEvent(
+        new Event('submit', { bubbles: true, cancelable: false })
+      );
+    }
+  }, []);
+
+  const setSelectedIdWithKeyboard = useCallback(
+    function setSelectedIdWithKeyboard(id: string | null) {
+      submissionLocker.current.lastKeyboardSelectedId = id;
+      setSelectedSuggestionId(id);
+    },
+    []
+  );
+
   const onKeyDown = useOnKeyDown({
     onQueryBecomesObsolete,
     suggestions,
@@ -135,9 +141,10 @@ export default function AutoCompleteSearch<SuggestionData = any>({
     input,
     currentQuery,
     queryTimestamps,
-    setSelectedSuggestionId,
     setPerceivedInputVal,
     setIsFetching,
+    attemptSubmit: onKeyDownSubmit,
+    setSelectedSuggestionId: setSelectedIdWithKeyboard,
   });
 
   const onChange = useCallback(function onChange(
@@ -164,11 +171,21 @@ export default function AutoCompleteSearch<SuggestionData = any>({
 
   const onFormSubmit = useCallback(
     function onFormSubmit(e: React.FormEvent<HTMLFormElement>) {
-      // TODO: passing selected suggestion
       e.preventDefault();
+
+      console.log('key id:', submissionLocker.current.lastKeyboardSelectedId);
+      console.log(
+        'pointer id:',
+        submissionLocker.current.lastKeyboardSelectedId
+      );
+
+      submissionLocker.current.release();
+
+      // TODO: passing selected suggestion
       onSubmit();
 
       if (blurOnSubmit) {
+        // TODO: consider removing or moving to onclick only since enter does it by default
         input.current?.blur();
       }
     },
@@ -207,6 +224,21 @@ export default function AutoCompleteSearch<SuggestionData = any>({
     [minCharsRequired, debouncedInputVal, debouncedInputValLength, performQuery]
   );
 
+  const onMouseDownSubmit = useCallback(function onMouseDownSubmit(id: string) {
+    const shouldContinue = submissionLocker.current.lock('pointer');
+    if (shouldContinue) {
+      setPerceivedInputVal(`suggestion id: ${id}`);
+    }
+  }, []);
+
+  const setSelectedIdWithPointer = useCallback(
+    function setSelectedIdWithPointer(id: string | null) {
+      submissionLocker.current.lastPointerSelectedId = id;
+      setSelectedSuggestionId(id);
+    },
+    []
+  );
+
   const containerContent = useSuggestionContainerContent<SuggestionData>({
     minCharsRequired,
     minCharsRequiredMessage,
@@ -220,15 +252,30 @@ export default function AutoCompleteSearch<SuggestionData = any>({
     selectedSuggestionId,
     showQueryError,
     debouncedInputValLength,
-    setSelectedSuggestionId,
+    attemptSubmit: onMouseDownSubmit,
+    setSelectedSuggestionId: setSelectedIdWithPointer,
   });
+
+  useEffect(
+    function onPointerSubmission() {
+      if (
+        submissionLocker.current.isLocked &&
+        submissionLocker.current.getLockInitiator() === 'pointer'
+      ) {
+        form.current?.dispatchEvent(
+          new Event('submit', { bubbles: true, cancelable: false })
+        );
+      }
+    },
+    [perceivedInputVal]
+  );
 
   if (selectedSuggestionId !== null && !suggestions?.length) {
     setSelectedSuggestionId(null);
   }
 
   return (
-    <form onSubmit={onFormSubmit}>
+    <form ref={form} onSubmit={onFormSubmit}>
       <label>
         {label}
         <input

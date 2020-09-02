@@ -2,6 +2,7 @@ import React, { useRef, useCallback, useMemo, createElement } from 'react';
 import {
   AutocompleteSearchProps,
   SuggestionResult,
+  SuggestionHTMLElement,
 } from '../types/autocomplete-search-props';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -14,6 +15,7 @@ type SuggestionListArgs<SuggestionData = any> = {
   suggestions: Readonly<SuggestionResult<SuggestionData>[]> | null;
   Suggestion: SuggestionType<SuggestionData>;
   setSelectedSuggestionId: (id: string) => unknown;
+  attemptSubmit: (text: string) => void;
 };
 
 type SuggestionListReturnType = (
@@ -25,17 +27,12 @@ type Cache = {
   unselected: Record<string, JSX.Element>;
 };
 
-type OnMouseOverTarget = {
-  dataset: {
-    autocompleteSearch: string;
-  };
-};
-
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export default function useSuggestionList<SuggestionData = any>({
   suggestions,
   Suggestion,
   setSelectedSuggestionId,
+  attemptSubmit,
 }: SuggestionListArgs<SuggestionData>): SuggestionListReturnType {
   const cache = useRef<Cache>({
     selected: {},
@@ -43,13 +40,19 @@ export default function useSuggestionList<SuggestionData = any>({
   });
 
   const onMouseOver = useCallback(
-    function onMouseOver(
-      e: React.MouseEvent<HTMLInputElement & OnMouseOverTarget>
-    ) {
+    function onMouseOver(e: React.MouseEvent<SuggestionHTMLElement>) {
       const id = e.currentTarget.dataset.autocompleteSearch;
       setSelectedSuggestionId(id);
     },
     [setSelectedSuggestionId]
+  );
+
+  const onMouseDown = useCallback(
+    function onMouseDown(e: React.MouseEvent<SuggestionHTMLElement>) {
+      e.preventDefault();
+      attemptSubmit(e.currentTarget.dataset.autocompleteSearch);
+    },
+    [attemptSubmit]
   );
 
   const getCached = useCallback(
@@ -70,10 +73,11 @@ export default function useSuggestionList<SuggestionData = any>({
         data,
         selected,
         onMouseOver,
+        onMouseDown,
       });
       return (cachePartition[id] = selectedSuggestion);
     },
-    [Suggestion, onMouseOver]
+    [Suggestion, onMouseOver, onMouseDown]
   );
 
   return useMemo(

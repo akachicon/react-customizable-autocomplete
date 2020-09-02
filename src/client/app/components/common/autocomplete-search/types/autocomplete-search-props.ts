@@ -14,11 +14,28 @@ export type OnQueryReturnPromise<SuggestionData = any> = Promise<
   Readonly<SuggestionResult<SuggestionData>[]>
 >;
 
+// It is guaranteed by convention that the consumer will
+// set autocomplete-search data attr on the component
+// root element. This type supposed to be used e.g. in
+// onMouseOver, onClick handlers as a generic arg to
+// React.MouseEvent (React.MouseEvent<SuggestionHTMLElement>).
+export type SuggestionHTMLElement = Element & {
+  dataset: {
+    autocompleteSearch: string;
+  };
+};
+
 export type SuggestionComponentProps<SuggestionData = any> = {
   id: string;
   selected: boolean;
   data: SuggestionData;
+
+  // We do not specify suggestionHTMLElement generic arg as it
+  // will cause conflicts. E.g. div inside the component won't
+  // accept onClick handler cause the div has no
+  // .dataset.autocompleteSearch: string.
   onMouseOver: React.MouseEventHandler;
+  onMouseDown: React.MouseEventHandler;
 };
 
 export type SuggestionComponent<SuggestionData = any> = (
