@@ -52,9 +52,6 @@ export default function AutoCompleteSearch<SuggestionData = any>({
   const debouncedInputValLength = debouncedInputVal.trim().length;
   const suggestionsExist = suggestions !== null;
 
-  // consider deriving this from suggestions - they are immutable
-  const suggestionsHaveLength = Boolean(suggestions?.length);
-
   boundSuggestionsExist.current = suggestionsExist;
 
   const performQuery = useCallback(
@@ -203,14 +200,13 @@ export default function AutoCompleteSearch<SuggestionData = any>({
     noResultsComponent,
     suggestions,
     suggestionsExist,
-    suggestionsHaveLength,
     selectedSuggestionId,
     showQueryError,
     debouncedInputValLength,
     setSelectedSuggestionId,
   });
 
-  if (!suggestionsHaveLength && selectedSuggestionId !== null) {
+  if (selectedSuggestionId !== null && !suggestions?.length) {
     setSelectedSuggestionId(null);
   }
 

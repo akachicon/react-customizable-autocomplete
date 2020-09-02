@@ -11,7 +11,7 @@ type SuggestionType<SuggestionData = any> = Required<
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type SuggestionListArgs<SuggestionData = any> = {
-  suggestions: SuggestionResult<SuggestionData>[] | null;
+  suggestions: Readonly<SuggestionResult<SuggestionData>[]> | null;
   Suggestion: SuggestionType<SuggestionData>;
   setSelectedSuggestionId: (id: string) => unknown;
 };
