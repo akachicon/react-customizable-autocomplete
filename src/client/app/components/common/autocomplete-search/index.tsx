@@ -6,6 +6,7 @@ import type {
   SuggestionResult,
   OnQueryReturnPromise,
 } from './types/autocomplete-search-props';
+import SubmissionLocker from './lib/submission-locker';
 import SuggestionDefaultComp from './components/suggestion';
 import NoResultsDefaultComp from './components/no-search-results';
 import QueryErrorDefaultComp from './components/query-error';
@@ -47,7 +48,20 @@ export default function AutoCompleteSearch<SuggestionData = any>({
   const currentQuery = useRef<OnQueryReturnPromise | null>(null);
   const queryTimestamps = useRef(new Map<OnQueryReturnPromise, number>());
   const latestResolvedQueryTimestamp = useRef(0);
+  const submissionLocker = useRef(new SubmissionLocker());
   const suggestionsExist = useRef(false);
+
+  const setSelectedIdWithKeyboard = useRef(function setSelectedIdWithKey(
+    id: string
+  ) {
+    submissionLocker.current.lastKeyboardSelectedId = id;
+  });
+
+  const setSelectedIdWithPointer = useRef(function setSelectedIdWithKey(
+    id: string
+  ) {
+    submissionLocker.current.lastPointerSelectedId = id;
+  });
 
   const debouncedInputValLength = debouncedInputVal.trim().length;
   suggestionsExist.current = suggestions !== null;
@@ -129,6 +143,11 @@ export default function AutoCompleteSearch<SuggestionData = any>({
   const onChange = useCallback(function onChange(
     e: React.ChangeEvent<HTMLInputElement>
   ) {
+    // Block the field for the time of a submission.
+    if (submissionLocker.current.isLocked) {
+      e.preventDefault();
+      return;
+    }
     setSelectedSuggestionId(null);
     setInputVal(e.currentTarget.value);
     setPerceivedInputVal(e.currentTarget.value);
