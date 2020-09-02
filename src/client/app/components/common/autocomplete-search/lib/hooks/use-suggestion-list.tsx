@@ -13,6 +13,7 @@ type SuggestionType<SuggestionData = any> = Required<
 type SuggestionListArgs<SuggestionData = any> = {
   suggestions: SuggestionResult<SuggestionData>[] | null;
   Suggestion: SuggestionType<SuggestionData>;
+  setSelectedSuggestionId: (id: string) => unknown;
 };
 
 type SuggestionListReturnType = (
@@ -24,15 +25,32 @@ type Cache = {
   unselected: Record<string, JSX.Element>;
 };
 
+type OnMouseOverTarget = {
+  dataset: {
+    autocompleteSearch: string;
+  };
+};
+
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export default function useSuggestionList<SuggestionData = any>({
   suggestions,
   Suggestion,
+  setSelectedSuggestionId,
 }: SuggestionListArgs<SuggestionData>): SuggestionListReturnType {
   const cache = useRef<Cache>({
     selected: {},
     unselected: {},
   });
+
+  const onMouseOver = useCallback(
+    function onMouseOver(
+      e: React.MouseEvent<HTMLInputElement & OnMouseOverTarget>
+    ) {
+      const id = e.currentTarget.dataset.autocompleteSearch;
+      setSelectedSuggestionId(id);
+    },
+    [setSelectedSuggestionId]
+  );
 
   const getCached = useCallback(
     function getCached(
@@ -48,12 +66,14 @@ export default function useSuggestionList<SuggestionData = any>({
       }
       const selectedSuggestion = createElement(Suggestion, {
         key: id,
+        id,
         data,
         selected,
+        onMouseOver,
       });
       return (cachePartition[id] = selectedSuggestion);
     },
-    [Suggestion]
+    [Suggestion, onMouseOver]
   );
 
   return useMemo(

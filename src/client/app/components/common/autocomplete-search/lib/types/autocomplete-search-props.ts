@@ -1,20 +1,24 @@
+import React from 'react';
+
 /* eslint-disable @typescript-eslint/no-explicit-any */
-export type SuggestionResult<SuggestionData = any> = {
+export type SuggestionResult<SuggestionData = any> = Readonly<{
   id: string;
   data: SuggestionData;
 
   // This is used to insert a suggestion's text in the input
   // after a user enters/clicks on it.
   transformDataIntoText: (data: SuggestionData) => string;
-};
+}>;
 
 export type OnQueryReturnPromise<SuggestionData = any> = Promise<
-  SuggestionResult<SuggestionData>[]
+  Readonly<SuggestionResult<SuggestionData>[]>
 >;
 
 export type SuggestionComponentProps<SuggestionData = any> = {
+  id: string;
   selected: boolean;
   data: SuggestionData;
+  onMouseOver: React.MouseEventHandler;
 };
 
 export type SuggestionComponent<SuggestionData = any> = (

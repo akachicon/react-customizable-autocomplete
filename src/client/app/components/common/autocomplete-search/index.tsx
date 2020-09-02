@@ -47,11 +47,12 @@ export default function AutoCompleteSearch<SuggestionData = any>({
   const currentQuery = useRef<OnQueryReturnPromise | null>(null);
   const queryTimestamps = useRef(new Map<OnQueryReturnPromise, number>());
   const latestResolvedQueryTimestamp = useRef(0);
-  const isNavigatingSuggestions = useRef(false);
   const boundSuggestionsExist = useRef(false);
 
   const debouncedInputValLength = debouncedInputVal.trim().length;
   const suggestionsExist = suggestions !== null;
+
+  // consider deriving this from suggestions - they are immutable
   const suggestionsHaveLength = Boolean(suggestions?.length);
 
   boundSuggestionsExist.current = suggestionsExist;
@@ -79,7 +80,7 @@ export default function AutoCompleteSearch<SuggestionData = any>({
       }
 
       function maybeUpdateSuggestions(
-        querySuggestions: SuggestionResult<SuggestionData>[]
+        querySuggestions: Readonly<SuggestionResult<SuggestionData>[]>
       ) {
         const latestResolvedTs = latestResolvedQueryTimestamp.current;
         const queryPromiseTs = queryTimestamps.current.get(queryPromise);
@@ -119,13 +120,11 @@ export default function AutoCompleteSearch<SuggestionData = any>({
   const onKeyDown = useOnKeyDown({
     onQueryBecomesObsolete,
     suggestions,
-    suggestionsHaveLength,
     selectedSuggestionId,
     inputVal,
     input,
     currentQuery,
     queryTimestamps,
-    isNavigatingSuggestions,
     setSelectedSuggestionId,
     setPerceivedInputVal,
     setIsFetching,
@@ -134,7 +133,6 @@ export default function AutoCompleteSearch<SuggestionData = any>({
   const onChange = useCallback(function onChange(
     e: React.ChangeEvent<HTMLInputElement>
   ) {
-    isNavigatingSuggestions.current = false;
     setSelectedSuggestionId(null);
     setInputVal(e.currentTarget.value);
     setPerceivedInputVal(e.currentTarget.value);
@@ -209,11 +207,10 @@ export default function AutoCompleteSearch<SuggestionData = any>({
     selectedSuggestionId,
     showQueryError,
     debouncedInputValLength,
+    setSelectedSuggestionId,
   });
 
   if (!suggestionsHaveLength && selectedSuggestionId !== null) {
-    // TODO: consider removing isNavigating
-    isNavigatingSuggestions.current = false;
     setSelectedSuggestionId(null);
   }
 

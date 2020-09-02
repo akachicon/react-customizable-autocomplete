@@ -14,13 +14,11 @@ type Dependencies<SuggestionData = any> = Pick<
   'onQueryBecomesObsolete'
 > & {
   suggestions: SuggestionResult<SuggestionData>[] | null;
-  suggestionsHaveLength: boolean;
   selectedSuggestionId: string | null;
   inputVal: string;
   input: MutableRefObject<HTMLInputElement | null>;
   currentQuery: MutableRefObject<OnQueryReturnPromise | null>;
   queryTimestamps: MutableRefObject<Map<OnQueryReturnPromise, number>>;
-  isNavigatingSuggestions: MutableRefObject<boolean>;
   setSelectedSuggestionId: (id: string | null) => unknown;
   setPerceivedInputVal: (val: string) => unknown;
   setIsFetching: (isFetching: boolean) => unknown;
@@ -33,21 +31,25 @@ const { ARROW_UP, ARROW_DOWN, ESCAPE } = keys;
 export default function useOnKeyDown<SuggestionData>({
   onQueryBecomesObsolete,
   suggestions: suggestionsDep,
-  suggestionsHaveLength: suggestionsHaveLengthDep,
   selectedSuggestionId: suggestedSelectionIdDep,
   inputVal: inputValDep,
   input,
   currentQuery,
   queryTimestamps,
-  isNavigatingSuggestions,
   setSelectedSuggestionId,
   setPerceivedInputVal,
   setIsFetching,
 }: Dependencies<SuggestionData>): OnKeyDownCallback {
   const suggestions = useBoundRef<Dependencies['suggestions']>(suggestionsDep);
-  const suggestionsHaveLength = useBoundRef(suggestionsHaveLengthDep);
   const selectedSuggestionId = useBoundRef(suggestedSelectionIdDep);
   const inputVal = useBoundRef(inputValDep);
+
+  const handleEscape = useCallback(
+    function handleEscape() {
+      input.current?.blur();
+    },
+    [input]
+  );
 
   const setPerceivedInput = useCallback(
     function setPerceivedInput(suggestionIdx: number | null) {
@@ -66,26 +68,42 @@ export default function useOnKeyDown<SuggestionData>({
     [suggestions, inputVal, setPerceivedInputVal]
   );
 
-  const handleEscape = useCallback(
-    function handleEscape() {
-      input.current?.blur();
+  const setNextSuggestion = useCallback(
+    function setNextSuggestionId() {
+      if (!suggestions.current?.length) return;
+
+      if (selectedSuggestionId === null) {
+        setSelectedSuggestionId(suggestions.current[0].id);
+        setPerceivedInput(0);
+        return;
+      }
+
+      // TODO: possible optimization
+      const selectedIdx = suggestions.current.findIndex(
+        (s) => s.id === selectedSuggestionId.current
+      );
+
+      const nextSuggestion = suggestions.current[selectedIdx + 1];
+      const newSelectedIdx = nextSuggestion ? selectedIdx + 1 : selectedIdx;
+
+      setSelectedSuggestionId(suggestions.current[newSelectedIdx].id);
+      setPerceivedInput(newSelectedIdx);
     },
-    [input]
+    [
+      suggestions,
+      selectedSuggestionId,
+      setSelectedSuggestionId,
+      setPerceivedInput,
+    ]
   );
 
   const handleArrowDown = useCallback(
     function handleArrowDown() {
-      if (!suggestionsHaveLength.current) {
+      if (!suggestions.current?.length) {
         return;
       }
 
-      if (!isNavigatingSuggestions.current) {
-        isNavigatingSuggestions.current = true;
-
-        // suggestionsHaveLength guarantees `suggestions !== null`
-        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-        setSelectedSuggestionId(suggestions.current![0].id);
-
+      if (selectedSuggestionId === null) {
         // Dispose current query since the use doesn't want to get
         // an update after they started to to interact with the list.
         const query = currentQuery.current;
@@ -99,69 +117,40 @@ export default function useOnKeyDown<SuggestionData>({
             onQueryBecomesObsolete(query);
           }
         }
-        setPerceivedInput(0);
-        return;
       }
-
-      // suggestionsHaveLength guarantees `suggestions !== null`
-      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-      const suggestionList = suggestions.current!;
-
-      // TODO: possible optimization
-      const selectedIdx = suggestionList.findIndex(
-        (s) => s.id === selectedSuggestionId.current
-      );
-
-      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-      const nextSuggestion = suggestionList[selectedIdx + 1];
-      const newSelectedIdx = nextSuggestion ? selectedIdx + 1 : selectedIdx;
-
-      setSelectedSuggestionId(suggestionList[newSelectedIdx].id);
-      setPerceivedInput(newSelectedIdx);
-
+      setNextSuggestion();
       return;
     },
     [
       currentQuery,
       queryTimestamps,
-      isNavigatingSuggestions,
       suggestions,
-      suggestionsHaveLength,
       selectedSuggestionId,
-      setSelectedSuggestionId,
       setIsFetching,
       onQueryBecomesObsolete,
-      setPerceivedInput,
+      setNextSuggestion,
     ]
   );
 
   const handleArrowUp = useCallback(
     function handleArrowUp() {
-      if (!isNavigatingSuggestions.current) {
+      if (selectedSuggestionId === null || !suggestions.current?.length) {
         return;
       }
 
-      // isNavigatingSuggestions guarantees `suggestions !== null`
-      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-      const suggestionList = suggestions.current!;
-      const selectedIdx = suggestionList.findIndex(
+      const selectedIdx = suggestions.current.findIndex(
         (s) => s.id === selectedSuggestionId.current
       );
 
       const newSelectedIdx = selectedIdx > 0 ? selectedIdx - 1 : null;
       const newSelectedId =
-        newSelectedIdx === null ? null : suggestionList[newSelectedIdx].id;
+        newSelectedIdx === null ? null : suggestions.current[newSelectedIdx].id;
 
-      if (newSelectedId === null) {
-        isNavigatingSuggestions.current = false;
-      }
       setSelectedSuggestionId(newSelectedId);
       setPerceivedInput(newSelectedIdx);
-
       return;
     },
     [
-      isNavigatingSuggestions,
       suggestions,
       selectedSuggestionId,
       setSelectedSuggestionId,
