@@ -1,5 +1,5 @@
 import React from 'react';
-import type { NoSearchResultsComponent } from '../lib/types/autocomplete-search-props';
+import type { NoSearchResultsComponent } from '../../types/autocomplete-search-props';
 
 const NoSearchResults: NoSearchResultsComponent = ({ text }) => (
   <span>{text}</span>

@@ -19,7 +19,6 @@ type Dependencies<SuggestionData = any> = Pick<
   | 'noResultsComponent'
 > & {
   suggestions: Readonly<SuggestionResult<SuggestionData>[]> | null;
-  suggestionsExist: boolean;
   selectedSuggestionId: string | null;
   showQueryError: boolean;
   debouncedInputValLength: number;
@@ -37,7 +36,6 @@ export default function useSuggestionContainerContent<SuggestionData = any>({
   noResultsMessage,
   noResultsComponent: NoResults,
   suggestions,
-  suggestionsExist,
   selectedSuggestionId,
   setSelectedSuggestionId,
   showQueryError,
@@ -57,6 +55,7 @@ export default function useSuggestionContainerContent<SuggestionData = any>({
     [debouncedInputValLength, minCharsRequired]
   );
 
+  const suggestionsExist = Boolean(suggestions);
   const suggestionsHaveLength = Boolean(suggestions?.length);
 
   return useMemo(
@@ -92,12 +91,12 @@ export default function useSuggestionContainerContent<SuggestionData = any>({
       QueryError,
       noResultsMessage,
       NoResults,
-      suggestionsExist,
       selectedSuggestionId,
       showQueryError,
       getCachedOnProps,
       minCharsCheckPassed,
       getSuggestionList,
+      suggestionsExist,
       suggestionsHaveLength,
     ]
   );

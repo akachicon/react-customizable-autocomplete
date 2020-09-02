@@ -1,5 +1,5 @@
 import React from 'react';
-import type { SuggestionComponent } from '../lib/types/autocomplete-search-props';
+import type { SuggestionComponent } from '../../types/autocomplete-search-props';
 
 const Suggestion: SuggestionComponent<unknown> = ({
   id,

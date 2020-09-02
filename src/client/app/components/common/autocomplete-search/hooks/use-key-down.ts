@@ -13,7 +13,7 @@ type Dependencies<SuggestionData = any> = Pick<
   AutocompleteSearchProps<SuggestionData>,
   'onQueryBecomesObsolete'
 > & {
-  suggestions: SuggestionResult<SuggestionData>[] | null;
+  suggestions: Readonly<SuggestionResult<SuggestionData>[]> | null;
   selectedSuggestionId: string | null;
   inputVal: string;
   input: MutableRefObject<HTMLInputElement | null>;
@@ -53,7 +53,7 @@ export default function useOnKeyDown<SuggestionData>({
 
   const setPerceivedInput = useCallback(
     function setPerceivedInput(suggestionIdx: number | null) {
-      if (suggestions.current === null) return;
+      if (!suggestions.current) return;
 
       if (suggestionIdx === null) {
         setPerceivedInputVal(inputVal.current);
@@ -78,7 +78,6 @@ export default function useOnKeyDown<SuggestionData>({
         return;
       }
 
-      // TODO: possible optimization
       const selectedIdx = suggestions.current.findIndex(
         (s) => s.id === selectedSuggestionId.current
       );

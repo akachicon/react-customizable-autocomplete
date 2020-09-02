@@ -1,15 +1,15 @@
 import React, { useState, useRef, useCallback, useEffect } from 'react';
-import useOnKeyDown from './lib/hooks/use-key-down';
-import useSuggestionContainerContent from './lib/hooks/use-suggestion-container-content';
+import useOnKeyDown from './hooks/use-key-down';
+import useSuggestionContainerContent from './hooks/use-suggestion-container-content';
 import type {
   AutocompleteSearchProps,
   SuggestionResult,
   OnQueryReturnPromise,
-} from './lib/types/autocomplete-search-props';
-import SuggestionDefaultComp from './suggestion';
-import NoResultsDefaultComp from './no-search-results';
-import QueryErrorDefaultComp from './query-error';
-import MinCharsRequiredDefaultComp from './min-chars-required';
+} from './types/autocomplete-search-props';
+import SuggestionDefaultComp from './components/suggestion';
+import NoResultsDefaultComp from './components/no-search-results';
+import QueryErrorDefaultComp from './components/query-error';
+import MinCharsRequiredDefaultComp from './components/min-chars-required';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export default function AutoCompleteSearch<SuggestionData = any>({
@@ -35,9 +35,9 @@ export default function AutoCompleteSearch<SuggestionData = any>({
   const [debouncedInputVal, setDebouncedInputVal] = useState('');
   const [isFetching, setIsFetching] = useState(false);
   const [showContainer, setShowContainer] = useState(false);
-  const [suggestions, setSuggestions] = useState<
-    SuggestionResult<SuggestionData>[] | null
-  >(null);
+  const [suggestions, setSuggestions] = useState<Readonly<
+    SuggestionResult<SuggestionData>[]
+  > | null>(null);
   const [selectedSuggestionId, setSelectedSuggestionId] = useState<
     SuggestionResult<SuggestionData>['id'] | null
   >(null);
@@ -47,15 +47,14 @@ export default function AutoCompleteSearch<SuggestionData = any>({
   const currentQuery = useRef<OnQueryReturnPromise | null>(null);
   const queryTimestamps = useRef(new Map<OnQueryReturnPromise, number>());
   const latestResolvedQueryTimestamp = useRef(0);
-  const boundSuggestionsExist = useRef(false);
+  const suggestionsExist = useRef(false);
 
   const debouncedInputValLength = debouncedInputVal.trim().length;
-  const suggestionsExist = suggestions !== null;
-
-  boundSuggestionsExist.current = suggestionsExist;
+  suggestionsExist.current = suggestions !== null;
 
   const performQuery = useCallback(
     function performQuery(query) {
+      // TODO: encapsulate query logic
       const disposableQuery = currentQuery.current;
       const queryPromise = onQuery(query);
 
@@ -172,7 +171,7 @@ export default function AutoCompleteSearch<SuggestionData = any>({
     function validateAndPerformQuery() {
       if (debouncedInputValLength >= minCharsRequired) {
         performQuery(debouncedInputVal);
-      } else if (boundSuggestionsExist.current) {
+      } else if (suggestionsExist.current) {
         // Consider the following scenario:
         // - a user already has some suggestions (maybe an empty list)
         // - the user removes input
@@ -199,7 +198,6 @@ export default function AutoCompleteSearch<SuggestionData = any>({
     noResultsMessage,
     noResultsComponent,
     suggestions,
-    suggestionsExist,
     selectedSuggestionId,
     showQueryError,
     debouncedInputValLength,
