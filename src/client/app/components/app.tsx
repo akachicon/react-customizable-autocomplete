@@ -25,9 +25,9 @@ function App(): JSX.Element {
           console.log('onQuery');
           return onQuery();
         }}
-        onQueryBecomesObsolete={(queryPromise) =>
-          console.log('query becomes obsolete')
-        }
+        onQueryBecomesObsolete={(queryPromise) => {
+          console.log('query becomes obsolete');
+        }}
         onSubmit={({ id, query }) =>
           console.log(
             `consume submit: \nid: ${

@@ -30,6 +30,7 @@ export default function AutoCompleteSearch<SuggestionData = any>({
   minCharsRequiredComponent = MinCharsRequiredDefaultComp,
   minCharsRequiredMessage = 'Start typing to see suggestions',
   preserveInputOnSubmit = true,
+  htmlFormAttrs,
 }: AutocompleteSearchProps<SuggestionData>): JSX.Element {
   const [inputVal, setInputVal] = useState('');
   const [debouncedInputVal, setDebouncedInputVal] = useState('');
@@ -48,9 +49,14 @@ export default function AutoCompleteSearch<SuggestionData = any>({
   const form = useRef<HTMLFormElement | null>(null);
   const input = useRef<HTMLInputElement | null>(null);
 
-  const currentQuery = useRef<OnQueryReturnPromise | null>(null);
-  const queryTimestamps = useRef(new Map<OnQueryReturnPromise, number>());
+  const currentQuery = useRef<OnQueryReturnPromise<SuggestionData> | null>(
+    null
+  );
+  const queryTimestamps = useRef(
+    new Map<OnQueryReturnPromise<SuggestionData>, number>()
+  );
   const latestResolvedQueryTimestamp = useRef(0);
+  const obsoleteQueries = useRef<OnQueryReturnPromise<SuggestionData>[]>([]);
 
   const submissionLocker = useRef(new SubmissionLocker());
   const suggestionsExist = useRef(false);
@@ -75,20 +81,51 @@ export default function AutoCompleteSearch<SuggestionData = any>({
   },
   []);
 
+  const makeQueryObsolete = useCallback(
+    function makeQueryObsolete(query: OnQueryReturnPromise<SuggestionData>) {
+      obsoleteQueries.current.push(query);
+      if (onQueryBecomesObsolete) {
+        onQueryBecomesObsolete(query);
+      }
+    },
+    [onQueryBecomesObsolete]
+  );
+
+  const hasLatestTimestamp = useCallback(function hasLatestTimestamp(
+    queryPromise
+  ) {
+    const latestResolvedTs = latestResolvedQueryTimestamp.current;
+    const queryPromiseTs = queryTimestamps.current.get(queryPromise);
+
+    if (queryPromiseTs === undefined) {
+      return undefined;
+    }
+    return queryPromiseTs > latestResolvedTs;
+  },
+  []);
+
   const performQuery = useCallback(
     function performQuery(query) {
       const disposableQuery = currentQuery.current;
       const queryPromise = onQuery(query);
 
+      setIsFetching(true);
       currentQuery.current = queryPromise;
       queryTimestamps.current.set(queryPromise, +new Date());
 
-      if (disposableQuery && onQueryBecomesObsolete) {
-        onQueryBecomesObsolete(disposableQuery);
+      if (disposableQuery) {
+        makeQueryObsolete(disposableQuery);
+      }
+
+      function getQueryTimestamp() {
+        return queryTimestamps.current.get(queryPromise);
       }
 
       function nullifyQueryPromise() {
         queryTimestamps.current.delete(queryPromise);
+        obsoleteQueries.current = obsoleteQueries.current.filter(
+          (p) => p !== queryPromise
+        );
 
         // We don't want to nullify promises that come after the current.
         if (currentQuery.current === queryPromise) {
@@ -100,11 +137,10 @@ export default function AutoCompleteSearch<SuggestionData = any>({
       function maybeUpdateSuggestions(
         querySuggestions: Readonly<SuggestionResult<SuggestionData>[]>
       ) {
-        const latestResolvedTs = latestResolvedQueryTimestamp.current;
-        const queryPromiseTs = queryTimestamps.current.get(queryPromise);
+        const hasLatestTs = hasLatestTimestamp(queryPromise);
 
-        if ((queryPromiseTs as number) > latestResolvedTs) {
-          latestResolvedQueryTimestamp.current = queryPromiseTs as number;
+        if (hasLatestTs) {
+          latestResolvedQueryTimestamp.current = getQueryTimestamp() as number;
 
           setShowQueryError(false);
           setSuggestions(querySuggestions.slice(0, suggestionsLimit));
@@ -113,11 +149,27 @@ export default function AutoCompleteSearch<SuggestionData = any>({
       }
 
       function maybeShowError() {
+        // Case: two queries are in flight, the second resolves with error.
+        // After this, the first query resolves with data. To prevent showing
+        // data irrelevant to the request and hiding error message, save the
+        // timestamp.
+        const hasLatestTs = hasLatestTimestamp(queryPromise);
+        if (hasLatestTs) {
+          latestResolvedQueryTimestamp.current = getQueryTimestamp() as number;
+        }
+
         // Show the error only if this is the latest query
         // set in flight. If there are other queries in flight
         // the better UX is to show previous results over the error.
 
         if (currentQuery.current === queryPromise) {
+          // The query will be obsolete when
+          // - a query is on the flight (wrapping condition)
+          // - the query was marked as obsolete with makeQueryObsolete
+          // - the query was rejected in onQueryBecomesObsolete
+          if (obsoleteQueries.current.includes(queryPromise)) {
+            return;
+          }
           setShowQueryError(true);
           setSelectedSuggestionId(null);
         }
@@ -134,7 +186,24 @@ export default function AutoCompleteSearch<SuggestionData = any>({
         }
       );
     },
-    [onQuery, onQueryBecomesObsolete, suggestionsLimit]
+    [onQuery, suggestionsLimit, makeQueryObsolete, hasLatestTimestamp]
+  );
+
+  const disposeCurrentQuery = useCallback(
+    function disposeCurrentQuery() {
+      const queryInFlight = currentQuery.current;
+
+      if (!queryInFlight) return;
+
+      // The following two lines will exclude query promise
+      // from handling.
+      currentQuery.current = null;
+      queryTimestamps.current.delete(queryInFlight);
+
+      makeQueryObsolete(queryInFlight);
+      setIsFetching(false);
+    },
+    [makeQueryObsolete]
   );
 
   const onKeyDownSubmit = useCallback(function onKeyDownSubmit() {
@@ -171,11 +240,16 @@ export default function AutoCompleteSearch<SuggestionData = any>({
         e.preventDefault();
         return;
       }
+      const value = e.currentTarget.value;
+
+      if (value.trim().length < minCharsRequired) {
+        disposeCurrentQuery();
+      }
       submissionLocker.current.lastKeyboardSelectedId = null;
-      setInputVal(e.currentTarget.value);
-      setPerceivedInputVal(e.currentTarget.value);
+      setInputVal(value);
+      setPerceivedInputVal(value);
     },
-    [setPerceivedInputVal]
+    [minCharsRequired, disposeCurrentQuery, setPerceivedInputVal]
   );
 
   const onFocus = useCallback(function onFocus() {
@@ -189,16 +263,7 @@ export default function AutoCompleteSearch<SuggestionData = any>({
   const onFormSubmit = useCallback(
     function onFormSubmit(e: React.FormEvent<HTMLFormElement>) {
       e.preventDefault();
-      const queryInFlight = currentQuery.current;
-
-      if (queryInFlight) {
-        if (onQueryBecomesObsolete) {
-          onQueryBecomesObsolete(queryInFlight);
-        }
-        queryTimestamps.current.delete(queryInFlight);
-        currentQuery.current = null;
-        setIsFetching(false);
-      }
+      disposeCurrentQuery();
 
       const locker = submissionLocker.current;
       const id =
@@ -230,12 +295,7 @@ export default function AutoCompleteSearch<SuggestionData = any>({
       }
       input.current?.blur();
     },
-    [
-      onSubmit,
-      onQueryBecomesObsolete,
-      preserveInputOnSubmit,
-      setPerceivedInputVal,
-    ]
+    [onSubmit, preserveInputOnSubmit, disposeCurrentQuery, setPerceivedInputVal]
   );
 
   useEffect(
@@ -357,7 +417,7 @@ export default function AutoCompleteSearch<SuggestionData = any>({
           autoComplete="off"
         />
       </label>
-      {isFetching && <span>fetching suggestions</span>}
+      {isFetching && showContainer && <div>fetching suggestions</div>}
       {showContainer && (
         <div onMouseLeave={onContainerMouseLeave}>{containerContent}</div>
       )}

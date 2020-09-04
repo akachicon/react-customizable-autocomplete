@@ -80,4 +80,6 @@ export type AutocompleteSearchProps<SuggestionData> = {
   loaderComponent?: LoaderComponent;
   showLoader?: boolean;
   preserveInputOnSubmit?: boolean;
+  htmlFormAttrs?: React.FormHTMLAttributes<HTMLFormElement>;
+  children?: (...args: unknown[]) => JSX.Element;
 };
