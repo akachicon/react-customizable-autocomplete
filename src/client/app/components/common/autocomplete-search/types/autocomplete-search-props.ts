@@ -11,8 +11,16 @@ export type SuggestionResult<SuggestionData = any> = Readonly<{
 }>;
 
 export type OnQueryReturnPromise<SuggestionData = any> = Promise<
-  Readonly<SuggestionResult<SuggestionData>[]>
+  readonly SuggestionResult<SuggestionData>[]
 >;
+
+/* eslint-disable @typescript-eslint/no-explicit-any */
+export type OnSubmitArg<SuggestionData = any> = Readonly<{
+  id: string | null;
+  query: string;
+  suggestions: readonly SuggestionResult<SuggestionData>[] | null;
+  input: HTMLInputElement;
+}>;
 
 // It is guaranteed by convention that the consumer will
 // set autocomplete-search data attr on the component
@@ -58,7 +66,7 @@ export type AutocompleteSearchProps<SuggestionData> = {
   name?: string;
   onQuery: (query: string) => OnQueryReturnPromise<SuggestionData>;
   onQueryBecomesObsolete?: (queryPromise: OnQueryReturnPromise) => void;
-  onSubmit: () => void;
+  onSubmit: (arg: OnSubmitArg) => void;
   debounceMs?: number;
   suggestionsLimit?: number;
   suggestionComponent?: SuggestionComponent<SuggestionData>;
@@ -71,5 +79,5 @@ export type AutocompleteSearchProps<SuggestionData> = {
   minCharsRequiredMessage?: string;
   loaderComponent?: LoaderComponent;
   showLoader?: boolean;
-  blurOnSubmit?: boolean;
+  preserveInputOnSubmit?: boolean;
 };

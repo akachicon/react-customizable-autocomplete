@@ -1,27 +1,17 @@
 import React, { useCallback } from 'react';
 import type { MutableRefObject } from 'react';
-import type {
-  AutocompleteSearchProps,
-  SuggestionResult,
-  OnQueryReturnPromise,
-} from '../types/autocomplete-search-props';
+import type { SuggestionResult } from '../types/autocomplete-search-props';
 import { useBoundRef } from '@lib/utils';
 import { keys } from '@constants/keyboard';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-type Dependencies<SuggestionData = any> = Pick<
-  AutocompleteSearchProps<SuggestionData>,
-  'onQueryBecomesObsolete'
-> & {
+type Dependencies<SuggestionData = any> = {
   suggestions: Readonly<SuggestionResult<SuggestionData>[]> | null;
   selectedSuggestionId: string | null;
   inputVal: string;
   input: MutableRefObject<HTMLInputElement | null>;
-  currentQuery: MutableRefObject<OnQueryReturnPromise | null>;
-  queryTimestamps: MutableRefObject<Map<OnQueryReturnPromise, number>>;
   setSelectedSuggestionId: (id: string | null) => unknown;
   setPerceivedInputVal: (val: string) => unknown;
-  setIsFetching: (isFetching: boolean) => unknown;
   attemptSubmit: () => void;
 };
 
@@ -30,16 +20,12 @@ type OnKeyDownCallback = React.KeyboardEventHandler<HTMLInputElement>;
 const { ARROW_UP, ARROW_DOWN, ESCAPE, ENTER } = keys;
 
 export default function useOnKeyDown<SuggestionData>({
-  onQueryBecomesObsolete,
   suggestions: suggestionsDep,
   selectedSuggestionId: suggestedSelectionIdDep,
   inputVal: inputValDep,
   input,
-  currentQuery,
-  queryTimestamps,
   setSelectedSuggestionId,
   setPerceivedInputVal,
-  setIsFetching,
   attemptSubmit,
 }: Dependencies<SuggestionData>): OnKeyDownCallback {
   const suggestions = useBoundRef<Dependencies['suggestions']>(suggestionsDep);
@@ -103,34 +89,10 @@ export default function useOnKeyDown<SuggestionData>({
       if (!suggestions.current?.length) {
         return;
       }
-
-      if (selectedSuggestionId === null) {
-        // Dispose current query since the use doesn't want to get
-        // an update after they started to to interact with the list.
-        const query = currentQuery.current;
-        if (query !== null) {
-          // TODO: encapsulate query functionality
-          queryTimestamps.current.delete(query);
-          currentQuery.current = null;
-          setIsFetching(false);
-
-          if (onQueryBecomesObsolete) {
-            onQueryBecomesObsolete(query);
-          }
-        }
-      }
       setNextSuggestion();
       return;
     },
-    [
-      currentQuery,
-      queryTimestamps,
-      suggestions,
-      selectedSuggestionId,
-      setIsFetching,
-      onQueryBecomesObsolete,
-      setNextSuggestion,
-    ]
+    [suggestions, setNextSuggestion]
   );
 
   const handleArrowUp = useCallback(
