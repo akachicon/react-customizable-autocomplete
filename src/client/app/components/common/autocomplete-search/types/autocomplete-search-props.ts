@@ -1,4 +1,8 @@
-import React from 'react';
+import React, {
+  ForwardRefExoticComponent,
+  PropsWithoutRef,
+  RefAttributes,
+} from 'react';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 export type SuggestionResult<SuggestionData = any> = Readonly<{
@@ -15,7 +19,7 @@ export type OnQueryReturnPromise<SuggestionData = any> = Promise<
 >;
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
-export type OnSubmitArg<SuggestionData = any> = Readonly<{
+export type OnSubmitParam<SuggestionData = any> = Readonly<{
   id: string | null;
   query: string;
   suggestions: readonly SuggestionResult<SuggestionData>[] | null;
@@ -59,14 +63,42 @@ export type MinCharsRequiredComponent = (props: {
   text: string;
 }) => JSX.Element;
 
-export type LoaderComponent = () => JSX.Element;
+export type InputComponentProps = {
+  inputProps: JSX.IntrinsicElements['input'];
+  isFetching: boolean;
+};
 
-export type AutocompleteSearchProps<SuggestionData> = {
+export type InputComponentFunction = React.ForwardRefRenderFunction<
+  HTMLInputElement,
+  InputComponentProps
+>;
+
+export type InputComponent = ForwardRefExoticComponent<
+  PropsWithoutRef<InputComponentProps> & RefAttributes<HTMLInputElement>
+>;
+
+export type ContainerComponentProps = {
+  containerProps: {
+    onMouseLeave: React.MouseEventHandler;
+  };
+  isFetching: boolean;
+  isOpen: boolean;
+  children: JSX.Element | JSX.Element[];
+};
+
+export type ContainerComponent = (
+  props: ContainerComponentProps
+) => JSX.Element;
+
+export type AutocompleteSearchProps<SuggestionData = unknown> = {
   label: string;
   name?: string;
   onQuery: (query: string) => OnQueryReturnPromise<SuggestionData>;
   onQueryBecomesObsolete?: (queryPromise: OnQueryReturnPromise) => void;
-  onSubmit: (arg: OnSubmitArg) => void;
+  onSubmit: (
+    arg: OnSubmitParam,
+    event: React.FormEvent<HTMLFormElement>
+  ) => void;
   debounceMs?: number;
   suggestionsLimit?: number;
   suggestionComponent?: SuggestionComponent<SuggestionData>;
@@ -77,9 +109,8 @@ export type AutocompleteSearchProps<SuggestionData> = {
   minCharsRequired?: number;
   minCharsRequiredComponent?: MinCharsRequiredComponent;
   minCharsRequiredMessage?: string;
-  loaderComponent?: LoaderComponent;
-  showLoader?: boolean;
   preserveInputOnSubmit?: boolean;
-  htmlFormAttrs?: React.FormHTMLAttributes<HTMLFormElement>;
-  children?: (...args: unknown[]) => JSX.Element;
+  formProps?: JSX.IntrinsicElements['form'];
+  inputComponent?: InputComponent;
+  containerComponent?: ContainerComponent;
 };

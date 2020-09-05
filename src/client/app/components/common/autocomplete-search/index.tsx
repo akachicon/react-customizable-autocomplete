@@ -1,4 +1,10 @@
-import React, { useState, useRef, useCallback, useEffect } from 'react';
+import React, {
+  useState,
+  useRef,
+  useCallback,
+  useEffect,
+  useMemo,
+} from 'react';
 import useOnKeyDown from './hooks/use-key-down';
 import useSuggestionContainerContent from './hooks/use-suggestion-container-content';
 import type {
@@ -11,11 +17,13 @@ import SuggestionDefaultComp from './components/suggestion';
 import NoResultsDefaultComp from './components/no-search-results';
 import QueryErrorDefaultComp from './components/query-error';
 import MinCharsRequiredDefaultComp from './components/min-chars-required';
+import InputDefaultComp from './components/input';
+import ContainerDefaultComp from './components/container';
+
+const isDev = process?.env?.NODE_ENV === 'development';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export default function AutoCompleteSearch<SuggestionData = any>({
-  label,
-  name = 'q',
   onQuery,
   onQueryBecomesObsolete,
   onSubmit,
@@ -30,7 +38,9 @@ export default function AutoCompleteSearch<SuggestionData = any>({
   minCharsRequiredComponent = MinCharsRequiredDefaultComp,
   minCharsRequiredMessage = 'Start typing to see suggestions',
   preserveInputOnSubmit = true,
-  htmlFormAttrs,
+  formProps,
+  inputComponent: InputComponent = InputDefaultComp,
+  containerComponent: ContainerDefaultComponent = ContainerDefaultComp,
 }: AutocompleteSearchProps<SuggestionData>): JSX.Element {
   const [inputVal, setInputVal] = useState('');
   const [debouncedInputVal, setDebouncedInputVal] = useState('');
@@ -271,13 +281,16 @@ export default function AutoCompleteSearch<SuggestionData = any>({
           ? locker.lastKeyboardSelectedId
           : locker.lastPointerSelectedId;
 
-      onSubmit({
-        id,
-        query: boundPerceivedInputVal.current,
-        suggestions: boundSuggestions.current,
-        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-        input: input.current!,
-      });
+      onSubmit(
+        {
+          id,
+          query: boundPerceivedInputVal.current,
+          suggestions: boundSuggestions.current,
+          // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+          input: input.current!,
+        },
+        e
+      );
 
       locker.release();
       locker.lastKeyboardSelectedId = null;
@@ -398,29 +411,68 @@ export default function AutoCompleteSearch<SuggestionData = any>({
     [perceivedInputValTrigger]
   );
 
+  const additionalFormProps = useMemo(
+    function getFormArgs() {
+      if (!formProps) {
+        return {};
+      }
+      const { ref, onSubmit, ...allowedFormProps } = formProps;
+
+      if (isDev && ref !== undefined) {
+        throw new Error(
+          '[autocomplete-search]: you cannot pass `ref` in `formProps`,' +
+            'instead use allowed callback props'
+        );
+      }
+      if (isDev && onSubmit !== undefined) {
+        throw new Error(
+          '[autocomplete-search]: you cannot pass `onSubmit` in `formProps`,' +
+            'instead use `onSubmit` directly on the search component'
+        );
+      }
+      return allowedFormProps;
+    },
+    [formProps]
+  );
+
+  const inputProps = useMemo(
+    function inputProps() {
+      return {
+        ref: input,
+        value: perceivedInputVal,
+        onChange: onChange,
+        onFocus: onFocus,
+        onBlur: onBlur,
+        onKeyDown: onKeyDown,
+        autoComplete: 'off',
+      };
+    },
+    [input, perceivedInputVal, onChange, onFocus, onBlur, onKeyDown]
+  );
+
+  const containerProps = useMemo(
+    function inputProps() {
+      return {
+        onMouseLeave: onContainerMouseLeave,
+      };
+    },
+    [onContainerMouseLeave]
+  );
+
   if (selectedSuggestionId !== null && !suggestions?.length) {
     setSelectedSuggestionId(null);
   }
 
   return (
-    <form ref={form} onSubmit={onFormSubmit}>
-      <label>
-        {label}
-        <input
-          ref={input}
-          name={name}
-          value={perceivedInputVal}
-          onChange={onChange}
-          onFocus={onFocus}
-          onBlur={onBlur}
-          onKeyDown={onKeyDown}
-          autoComplete="off"
-        />
-      </label>
-      {isFetching && showContainer && <div>fetching suggestions</div>}
-      {showContainer && (
-        <div onMouseLeave={onContainerMouseLeave}>{containerContent}</div>
-      )}
+    <form ref={form} onSubmit={onFormSubmit} {...additionalFormProps}>
+      <InputComponent inputProps={inputProps} isFetching={isFetching} />
+      <ContainerDefaultComponent
+        containerProps={containerProps}
+        isFetching={isFetching}
+        isOpen={showContainer}
+      >
+        {containerContent}
+      </ContainerDefaultComponent>
     </form>
   );
 }
