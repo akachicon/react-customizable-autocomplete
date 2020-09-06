@@ -21,6 +21,7 @@
       "dom.iterable",
       "esnext"
     ],
+    "target": "es2020",
     "moduleResolution": "node",
     "strict": true,
     "allowSyntheticDefaultImports": true,

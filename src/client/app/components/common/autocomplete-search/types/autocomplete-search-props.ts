@@ -8,6 +8,7 @@ import React, {
 export type SuggestionResult<SuggestionData = any> = Readonly<{
   id: string;
   data: SuggestionData;
+  text: string;
 
   // This is used to insert a suggestion's text in the input
   // after a user enters/clicks on it.
@@ -23,8 +24,12 @@ export type OnSubmitParam<SuggestionData = any> = Readonly<{
   id: string | null;
   query: string;
   suggestions: readonly SuggestionResult<SuggestionData>[] | null;
-  input: HTMLInputElement;
 }>;
+
+export type OnSubmitHandler<SuggestionData = unknown> = (
+  arg: OnSubmitParam<SuggestionData>,
+  event: React.FormEvent<HTMLFormElement>
+) => void;
 
 // It is guaranteed by convention that the consumer will
 // set autocomplete-search data attr on the component
@@ -95,10 +100,7 @@ export type AutocompleteSearchProps<SuggestionData = unknown> = {
   name?: string;
   onQuery: (query: string) => OnQueryReturnPromise<SuggestionData>;
   onQueryBecomesObsolete?: (queryPromise: OnQueryReturnPromise) => void;
-  onSubmit: (
-    arg: OnSubmitParam,
-    event: React.FormEvent<HTMLFormElement>
-  ) => void;
+  onSubmit: OnSubmitHandler<SuggestionData>;
   debounceMs?: number;
   suggestionsLimit?: number;
   suggestionComponent?: SuggestionComponent<SuggestionData>;

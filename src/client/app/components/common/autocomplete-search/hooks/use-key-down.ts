@@ -9,7 +9,7 @@ type Dependencies<SuggestionData = any> = {
   suggestions: Readonly<SuggestionResult<SuggestionData>[]> | null;
   selectedSuggestionId: string | null;
   inputVal: string;
-  input: MutableRefObject<HTMLInputElement | null>;
+  inputRf: MutableRefObject<HTMLInputElement | null>;
   setSelectedSuggestionId: (id: string | null) => unknown;
   setPerceivedInputVal: (val: string) => unknown;
   attemptSubmit: () => void;
@@ -23,7 +23,7 @@ export default function useOnKeyDown<SuggestionData>({
   suggestions: suggestionsDep,
   selectedSuggestionId: suggestedSelectionIdDep,
   inputVal: inputValDep,
-  input,
+  inputRf,
   setSelectedSuggestionId,
   setPerceivedInputVal,
   attemptSubmit,
@@ -34,9 +34,9 @@ export default function useOnKeyDown<SuggestionData>({
 
   const handleEscape = useCallback(
     function handleEscape() {
-      input.current?.blur();
+      inputRf.current?.blur();
     },
-    [input]
+    [inputRf]
   );
 
   const setPerceivedInput = useCallback(

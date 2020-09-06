@@ -77,6 +77,7 @@ const baseConfig = {
 
     // babel@7.8 default
     lib: ['dom', 'dom.iterable', 'esnext'],
+    target: 'es2020',
 
     // Though it is deprecated it solves the 'csstype' issue after installing it:
     // https://github.com/DefinitelyTyped/DefinitelyTyped/issues/24788

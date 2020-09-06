@@ -5,6 +5,8 @@ import React, {
   useEffect,
   useMemo,
 } from 'react';
+import usePerformQuery from './hooks/use-perform-query';
+import useOnSubmit from './hooks/use-submit';
 import useOnKeyDown from './hooks/use-key-down';
 import useSuggestionContainerContent from './hooks/use-suggestion-container-content';
 import type {
@@ -42,58 +44,60 @@ export default function AutoCompleteSearch<SuggestionData = any>({
   inputComponent: InputComponent = InputDefaultComp,
   containerComponent: ContainerDefaultComponent = ContainerDefaultComp,
 }: AutocompleteSearchProps<SuggestionData>): JSX.Element {
-  const [inputVal, setInputVal] = useState('');
-  const [debouncedInputVal, setDebouncedInputVal] = useState('');
-  const [perceivedInputVal, setPerceivedInputValProtected] = useState('');
-  const [perceivedInputValTrigger, setPerceivedInputValTrigger] = useState({});
-  const [isFetching, setIsFetching] = useState(false);
-  const [showContainer, setShowContainer] = useState(false);
-  const [suggestions, setSuggestions] = useState<
+  const [inputVal, setInputValSt] = useState('');
+  const [debouncedInputVal, setDebouncedInputValSt] = useState('');
+  const [perceivedInputVal, setPerceivedInputValSt] = useState('');
+  const [perceivedInputValTrigger, setPerceivedInputValTriggerSt] = useState(
+    {}
+  );
+  const [isFetching, setIsFetchingSt] = useState(false);
+  const [showContainer, setShowContainerSt] = useState(false);
+  const [suggestions, setSuggestionsSt] = useState<
     readonly SuggestionResult<SuggestionData>[] | null
   >(null);
-  const [selectedSuggestionId, setSelectedSuggestionId] = useState<
+  const [selectedSuggestionId, setSelectedSuggestionIdSt] = useState<
     SuggestionResult<SuggestionData>['id'] | null
   >(null);
-  const [showQueryError, setShowQueryError] = useState(false);
+  const [showQueryError, setShowQueryErrorSt] = useState(false);
 
-  const form = useRef<HTMLFormElement | null>(null);
-  const input = useRef<HTMLInputElement | null>(null);
+  const formRf = useRef<HTMLFormElement | null>(null);
+  const inputRf = useRef<HTMLInputElement | null>(null);
 
-  const currentQuery = useRef<OnQueryReturnPromise<SuggestionData> | null>(
+  const currentQueryRf = useRef<OnQueryReturnPromise<SuggestionData> | null>(
     null
   );
-  const queryTimestamps = useRef(
+  const queryTimestampsRf = useRef(
     new Map<OnQueryReturnPromise<SuggestionData>, number>()
   );
-  const latestResolvedQueryTimestamp = useRef(0);
-  const obsoleteQueries = useRef<OnQueryReturnPromise<SuggestionData>[]>([]);
+  const latestResolvedQueryTimestampRf = useRef(0);
+  const obsoleteQueriesRf = useRef<OnQueryReturnPromise<SuggestionData>[]>([]);
 
-  const submissionLocker = useRef(new SubmissionLocker());
-  const suggestionsExist = useRef(false);
+  const submissionLockerRf = useRef(new SubmissionLocker());
+  const suggestionsExistRf = useRef(false);
 
-  const boundPerceivedInputVal = useRef('');
-  boundPerceivedInputVal.current = perceivedInputVal;
+  const perceivedInputValRf = useRef('');
+  perceivedInputValRf.current = perceivedInputVal;
 
-  const boundSuggestions = useRef<Readonly<
+  const suggestionsRf = useRef<Readonly<
     SuggestionResult<SuggestionData>[]
   > | null>(null);
-  boundSuggestions.current = suggestions;
+  suggestionsRf.current = suggestions;
 
   const debouncedInputValLength = debouncedInputVal.trim().length;
-  suggestionsExist.current = suggestions !== null;
+  suggestionsExistRf.current = suggestions !== null;
 
   const setPerceivedInputVal = useCallback(function setPerceivedInputVal(
     val: string
   ) {
     // Pass an object to run trigger.
-    setPerceivedInputValTrigger({});
-    setPerceivedInputValProtected(val);
+    setPerceivedInputValTriggerSt({});
+    setPerceivedInputValSt(val);
   },
   []);
 
   const makeQueryObsolete = useCallback(
     function makeQueryObsolete(query: OnQueryReturnPromise<SuggestionData>) {
-      obsoleteQueries.current.push(query);
+      obsoleteQueriesRf.current.push(query);
       if (onQueryBecomesObsolete) {
         onQueryBecomesObsolete(query);
       }
@@ -102,10 +106,10 @@ export default function AutoCompleteSearch<SuggestionData = any>({
   );
 
   const hasLatestTimestamp = useCallback(function hasLatestTimestamp(
-    queryPromise
+    queryPromise: OnQueryReturnPromise<SuggestionData>
   ) {
-    const latestResolvedTs = latestResolvedQueryTimestamp.current;
-    const queryPromiseTs = queryTimestamps.current.get(queryPromise);
+    const latestResolvedTs = latestResolvedQueryTimestampRf.current;
+    const queryPromiseTs = queryTimestampsRf.current.get(queryPromise);
 
     if (queryPromiseTs === undefined) {
       return undefined;
@@ -114,112 +118,42 @@ export default function AutoCompleteSearch<SuggestionData = any>({
   },
   []);
 
-  const performQuery = useCallback(
-    function performQuery(query) {
-      const disposableQuery = currentQuery.current;
-      const queryPromise = onQuery(query);
-
-      setIsFetching(true);
-      currentQuery.current = queryPromise;
-      queryTimestamps.current.set(queryPromise, +new Date());
-
-      if (disposableQuery) {
-        makeQueryObsolete(disposableQuery);
-      }
-
-      function getQueryTimestamp() {
-        return queryTimestamps.current.get(queryPromise);
-      }
-
-      function nullifyQueryPromise() {
-        queryTimestamps.current.delete(queryPromise);
-        obsoleteQueries.current = obsoleteQueries.current.filter(
-          (p) => p !== queryPromise
-        );
-
-        // We don't want to nullify promises that come after the current.
-        if (currentQuery.current === queryPromise) {
-          currentQuery.current = null;
-          setIsFetching(false);
-        }
-      }
-
-      function maybeUpdateSuggestions(
-        querySuggestions: Readonly<SuggestionResult<SuggestionData>[]>
-      ) {
-        const hasLatestTs = hasLatestTimestamp(queryPromise);
-
-        if (hasLatestTs) {
-          latestResolvedQueryTimestamp.current = getQueryTimestamp() as number;
-
-          setShowQueryError(false);
-          setSuggestions(querySuggestions.slice(0, suggestionsLimit));
-          setSelectedSuggestionId(null);
-        }
-      }
-
-      function maybeShowError() {
-        // Case: two queries are in flight, the second resolves with error.
-        // After this, the first query resolves with data. To prevent showing
-        // data irrelevant to the request and hiding error message, save the
-        // timestamp.
-        const hasLatestTs = hasLatestTimestamp(queryPromise);
-        if (hasLatestTs) {
-          latestResolvedQueryTimestamp.current = getQueryTimestamp() as number;
-        }
-
-        // Show the error only if this is the latest query
-        // set in flight. If there are other queries in flight
-        // the better UX is to show previous results over the error.
-
-        if (currentQuery.current === queryPromise) {
-          // The query will be obsolete when
-          // - a query is on the flight (wrapping condition)
-          // - the query was marked as obsolete with makeQueryObsolete
-          // - the query was rejected in onQueryBecomesObsolete
-          if (obsoleteQueries.current.includes(queryPromise)) {
-            return;
-          }
-          setShowQueryError(true);
-          setSelectedSuggestionId(null);
-        }
-      }
-
-      queryPromise.then(
-        function handleSuggestions(querySuggestions) {
-          maybeUpdateSuggestions(querySuggestions);
-          nullifyQueryPromise();
-        },
-        function handleQueryError() {
-          maybeShowError();
-          nullifyQueryPromise();
-        }
-      );
-    },
-    [onQuery, suggestionsLimit, makeQueryObsolete, hasLatestTimestamp]
-  );
+  const performQuery = usePerformQuery<SuggestionData>({
+    currentQueryRf,
+    obsoleteQueriesRf,
+    queryTimestampsRf,
+    latestResolvedQueryTimestampRf,
+    setSuggestionsSt,
+    setSelectedSuggestionIdSt,
+    setIsFetchingSt,
+    setShowQueryErrorSt,
+    hasLatestTimestamp,
+    makeQueryObsolete,
+    suggestionsLimit,
+    onQuery,
+  });
 
   const disposeCurrentQuery = useCallback(
     function disposeCurrentQuery() {
-      const queryInFlight = currentQuery.current;
+      const queryInFlight = currentQueryRf.current;
 
       if (!queryInFlight) return;
 
       // The following two lines will exclude query promise
       // from handling.
-      currentQuery.current = null;
-      queryTimestamps.current.delete(queryInFlight);
+      currentQueryRf.current = null;
+      queryTimestampsRf.current.delete(queryInFlight);
 
       makeQueryObsolete(queryInFlight);
-      setIsFetching(false);
+      setIsFetchingSt(false);
     },
     [makeQueryObsolete]
   );
 
   const onKeyDownSubmit = useCallback(function onKeyDownSubmit() {
-    const shouldContinue = submissionLocker.current.lock('keyboard');
+    const shouldContinue = submissionLockerRf.current.lock('keyboard');
     if (shouldContinue) {
-      form.current?.dispatchEvent(
+      formRf.current?.dispatchEvent(
         new Event('submit', { bubbles: true, cancelable: false })
       );
     }
@@ -227,8 +161,8 @@ export default function AutoCompleteSearch<SuggestionData = any>({
 
   const setSelectedIdWithKeyboard = useCallback(
     function setSelectedIdWithKeyboard(id: string | null) {
-      submissionLocker.current.lastKeyboardSelectedId = id;
-      setSelectedSuggestionId(id);
+      submissionLockerRf.current.lastKeyboardSelectedId = id;
+      setSelectedSuggestionIdSt(id);
     },
     []
   );
@@ -237,8 +171,8 @@ export default function AutoCompleteSearch<SuggestionData = any>({
     suggestions,
     selectedSuggestionId,
     inputVal,
-    input,
     setPerceivedInputVal,
+    inputRf,
     attemptSubmit: onKeyDownSubmit,
     setSelectedSuggestionId: setSelectedIdWithKeyboard,
   });
@@ -246,7 +180,7 @@ export default function AutoCompleteSearch<SuggestionData = any>({
   const onChange = useCallback(
     function onChange(e: React.ChangeEvent<HTMLInputElement>) {
       // Block the field for the time of a submission.
-      if (submissionLocker.current.isLocked) {
+      if (submissionLockerRf.current.isLocked) {
         e.preventDefault();
         return;
       }
@@ -255,65 +189,41 @@ export default function AutoCompleteSearch<SuggestionData = any>({
       if (value.trim().length < minCharsRequired) {
         disposeCurrentQuery();
       }
-      submissionLocker.current.lastKeyboardSelectedId = null;
-      setInputVal(value);
+      submissionLockerRf.current.lastKeyboardSelectedId = null;
+      setInputValSt(value);
       setPerceivedInputVal(value);
     },
     [minCharsRequired, disposeCurrentQuery, setPerceivedInputVal]
   );
 
   const onFocus = useCallback(function onFocus() {
-    setShowContainer(true);
+    setShowContainerSt(true);
   }, []);
 
   const onBlur = useCallback(function onBlur() {
-    setShowContainer(false);
+    setShowContainerSt(false);
   }, []);
 
-  const onFormSubmit = useCallback(
-    function onFormSubmit(e: React.FormEvent<HTMLFormElement>) {
-      e.preventDefault();
-      disposeCurrentQuery();
-
-      const locker = submissionLocker.current;
-      const id =
-        locker.getLockInitiator() === 'keyboard'
-          ? locker.lastKeyboardSelectedId
-          : locker.lastPointerSelectedId;
-
-      onSubmit(
-        {
-          id,
-          query: boundPerceivedInputVal.current,
-          suggestions: boundSuggestions.current,
-          // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-          input: input.current!,
-        },
-        e
-      );
-
-      locker.release();
-      locker.lastKeyboardSelectedId = null;
-      locker.lastPointerSelectedId = null;
-
-      setSuggestions(null);
-      setSelectedSuggestionId(null);
-      setInputVal('');
-      setShowQueryError(false);
-      queryTimestamps.current = new Map<OnQueryReturnPromise, number>();
-      latestResolvedQueryTimestamp.current = 0;
-
-      if (!preserveInputOnSubmit) {
-        setPerceivedInputVal('');
-      }
-      input.current?.blur();
-    },
-    [onSubmit, preserveInputOnSubmit, disposeCurrentQuery, setPerceivedInputVal]
-  );
+  const onFormSubmit = useOnSubmit({
+    submissionLockerRf,
+    perceivedInputValRf,
+    suggestionsRf,
+    inputRf,
+    queryTimestampsRf,
+    latestResolvedQueryTimestampRf,
+    setSuggestionsSt,
+    setSelectedSuggestionIdSt,
+    setInputValSt,
+    setShowQueryErrorSt,
+    onSubmit,
+    preserveInputOnSubmit,
+    disposeCurrentQuery,
+    setPerceivedInputVal,
+  });
 
   useEffect(
     function debounceInputVal() {
-      const timer = setTimeout(setDebouncedInputVal, debounceMs, inputVal);
+      const timer = setTimeout(setDebouncedInputValSt, debounceMs, inputVal);
 
       return function removeTimer() {
         clearTimeout(timer);
@@ -326,7 +236,7 @@ export default function AutoCompleteSearch<SuggestionData = any>({
     function validateAndPerformQuery() {
       if (debouncedInputValLength >= minCharsRequired) {
         performQuery(debouncedInputVal);
-      } else if (suggestionsExist.current) {
+      } else if (suggestionsExistRf.current) {
         // Consider the following scenario:
         // - a user already has some suggestions (maybe an empty list)
         // - the user removes input
@@ -334,10 +244,10 @@ export default function AutoCompleteSearch<SuggestionData = any>({
         //    (min chars is passed)
         // For other parts of the code to detect the situation
         // when we should still render 'no results', though min chars
-        // has been passed, we use setSuggestions(null). This also
+        // has been passed, we use setSuggestionsSt(null). This also
         // applies to showQueryError.
-        setSuggestions(null);
-        setShowQueryError(false);
+        setSuggestionsSt(null);
+        setShowQueryErrorSt(false);
       }
     },
     [minCharsRequired, debouncedInputVal, debouncedInputValLength, performQuery]
@@ -345,9 +255,9 @@ export default function AutoCompleteSearch<SuggestionData = any>({
 
   const onMouseDownSubmit = useCallback(
     function onMouseDownSubmit(id: string) {
-      const shouldContinue = submissionLocker.current.lock('pointer');
+      const shouldContinue = submissionLockerRf.current.lock('pointer');
       if (shouldContinue) {
-        const suggestions = boundSuggestions.current;
+        const suggestions = suggestionsRf.current;
         const selectedSuggestion = suggestions?.find(
           ({ id: suggestionId }) => suggestionId === id
         );
@@ -355,7 +265,7 @@ export default function AutoCompleteSearch<SuggestionData = any>({
         // Though pointer can only submit existing values,
         // we preserve the check for typescript.
         if (!selectedSuggestion) {
-          submissionLocker.current.release();
+          submissionLockerRf.current.release();
           return;
         }
 
@@ -369,8 +279,8 @@ export default function AutoCompleteSearch<SuggestionData = any>({
 
   const setSelectedIdWithPointer = useCallback(
     function setSelectedIdWithPointer(id: string | null) {
-      submissionLocker.current.lastPointerSelectedId = id;
-      setSelectedSuggestionId(id);
+      submissionLockerRf.current.lastPointerSelectedId = id;
+      setSelectedSuggestionIdSt(id);
     },
     []
   );
@@ -393,17 +303,17 @@ export default function AutoCompleteSearch<SuggestionData = any>({
   });
 
   const onContainerMouseLeave = useCallback(function onContainerMouseLeave() {
-    submissionLocker.current.lastPointerSelectedId = null;
-    setSelectedSuggestionId(null);
+    submissionLockerRf.current.lastPointerSelectedId = null;
+    setSelectedSuggestionIdSt(null);
   }, []);
 
   useEffect(
     function onPointerSubmission() {
       if (
-        submissionLocker.current.isLocked &&
-        submissionLocker.current.getLockInitiator() === 'pointer'
+        submissionLockerRf.current.isLocked &&
+        submissionLockerRf.current.getLockInitiator() === 'pointer'
       ) {
-        form.current?.dispatchEvent(
+        formRf.current?.dispatchEvent(
           new Event('submit', { bubbles: true, cancelable: false })
         );
       }
@@ -438,7 +348,7 @@ export default function AutoCompleteSearch<SuggestionData = any>({
   const inputProps = useMemo(
     function inputProps() {
       return {
-        ref: input,
+        ref: inputRf,
         value: perceivedInputVal,
         onChange: onChange,
         onFocus: onFocus,
@@ -447,7 +357,7 @@ export default function AutoCompleteSearch<SuggestionData = any>({
         autoComplete: 'off',
       };
     },
-    [input, perceivedInputVal, onChange, onFocus, onBlur, onKeyDown]
+    [inputRf, perceivedInputVal, onChange, onFocus, onBlur, onKeyDown]
   );
 
   const containerProps = useMemo(
@@ -460,11 +370,11 @@ export default function AutoCompleteSearch<SuggestionData = any>({
   );
 
   if (selectedSuggestionId !== null && !suggestions?.length) {
-    setSelectedSuggestionId(null);
+    setSelectedSuggestionIdSt(null);
   }
 
   return (
-    <form ref={form} onSubmit={onFormSubmit} {...additionalFormProps}>
+    <form ref={formRf} onSubmit={onFormSubmit} {...additionalFormProps}>
       <InputComponent inputProps={inputProps} isFetching={isFetching} />
       <ContainerDefaultComponent
         containerProps={containerProps}
