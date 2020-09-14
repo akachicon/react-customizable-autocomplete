@@ -124,8 +124,6 @@ export default function AutoCompleteSearch<D = unknown>({
 
   const onMouseSelect = useCallback(
     function onMouseSelect(id: SuggestionId) {
-      console.log('onMouseSelect id:', id);
-
       submitLocker.lastMouseId = id;
       suggestionManager.selectId(id);
     },

@@ -59,8 +59,6 @@ export default function useSuggestionList<D = unknown>({
   const [error, setError] = useState(false);
   const { suggestions, selectedId } = suggestionManagerState;
 
-  console.log('list zero suggestion', suggestions?.[0]?.text);
-
   const memoizedList = useMemo(
     function calcContainerComp() {
       if (!gteMinChars) {

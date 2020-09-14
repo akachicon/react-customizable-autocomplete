@@ -4,7 +4,7 @@ import usePersistentObject from './use-persistent-object';
 export type SuggestionId = string | null;
 
 export type Suggestion<D = unknown> = Readonly<{
-  id: SuggestionId;
+  id: NonNullable<SuggestionId>;
   text: string;
   data: D;
 }>;
@@ -41,8 +41,6 @@ export default function useSuggestionManager<D = unknown>(): SuggestionManager<
   });
   state.current.suggestions = suggestions;
   state.current.selectedId = selectedId;
-
-  console.log(selectedId);
 
   const getSuggestionById = useCallback(function getSuggestionById(
     id: SuggestionId
