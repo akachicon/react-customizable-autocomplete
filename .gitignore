@@ -1,13 +1,6 @@
-/node_modules/
-/dist/
-/ssl/**/*.key
-/ssl/**/*.pem
-/ssl/**/*.srl
-/ssl/**/*.crt
-/ssl/**/*.csr
-/src/client/app/**/*.d.ts
-/.idea/
-/logs
-*.log
-npm-debug.log*
-*.report.html
+/dist
+/node_modules
+/.idea
+# TODO: check that /types/lib will end up in published package
+/types
+!/types/*.d.ts

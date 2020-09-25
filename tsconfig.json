@@ -1,20 +1,21 @@
 {
-  "include": [],
-  "files": [],
-  "exclude": [
-    "node_modules"
-  ],
-  "references": [
-    {
-      "path": "src/client/composite.app.tsconfig.json"
-    },
-    {
-      "path": "src/client/composite.test.tsconfig.json"
-    }
-  ],
+  "include": ["**/*.ts", "**/*.tsx"],
+  "exclude": ["dist", "types", "examples"],
   "compilerOptions": {
     "incremental": true,
-    "composite": true,
-    "tsBuildInfoFile": "node_modules/.cache/ts-build-info/solution"
+    "declaration": true,
+    "emitDeclarationOnly": true,
+    "declarationDir": "types",
+    "isolatedModules": true,
+    "jsx": "preserve",
+    "target": "ES2020",
+    "moduleResolution": "node",
+    "strict": true,
+    "allowSyntheticDefaultImports": true,
+    "typeRoots": [
+      "node_modules/@types"
+    ],
+    "forceConsistentCasingInFileNames": true,
+    "tsBuildInfoFile": "node_modules/.cache/ts-build-info"
   }
 }

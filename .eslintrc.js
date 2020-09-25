@@ -1,50 +1,14 @@
-const webpackConfig = require('./webpack-config/webpack.base.config');
-const {
-  baseDir,
-  clientDir,
-  serverDir,
-  outDir,
-  appGlobals,
-  appTsConfigFile,
-  testTsConfigFile,
-} = require('./project.config');
-const {
-  replaceBackslash,
-  relativeToBase: utilsRelativeToBase,
-} = require('./config-utils');
-
-const relativeToBase = utilsRelativeToBase.bind(null, baseDir);
-
-const clientGlobals = Object.keys(appGlobals).reduce((acc, global) => {
-  acc[global] = 'readonly';
-  return acc;
-}, {});
-
-const relativeServerDir = replaceBackslash(relativeToBase(serverDir));
-const relativeClientDir = replaceBackslash(relativeToBase(clientDir));
-const relativeOutDir = replaceBackslash(relativeToBase(outDir));
-
-const relativeAppTsConfig = replaceBackslash(relativeToBase(appTsConfigFile));
-const relativeTestTsConfig = replaceBackslash(relativeToBase(testTsConfigFile));
-
 const jsConfig = {
   parserOptions: {
-    ecmaVersion: 2020,
-    sourceType: 'module',
+    ecmaVersion: 2018,
   },
   env: {
-    es2020: true,
-    browser: true,
-    node: false,
+    es2017: true,
+    browser: false,
+    node: true,
   },
-  globals: clientGlobals,
-  plugins: ['import'],
   extends: [
-    'plugin:import/errors',
-    'plugin:import/warnings',
-    'plugin:react/recommended',
     'plugin:react-hooks/recommended',
-    // TODO: eslint-plugin-jsx-a11y
 
     // Disable eslint-plugin-react and rules that can conflict with prettier.
     'prettier/react',
@@ -72,27 +36,12 @@ const jsConfig = {
         allowClassStart: true,
         allowClassEnd: true,
       },
-      // TODO: import/no-cycle should (but does not) handle webpack aliases
-      // 'import/no-cycle': 2,
     ],
   },
   settings: {
-    'import/resolver': {
-      webpack: {
-        config: webpackConfig,
-      },
-    },
     react: {
-      pragma: 'React',
       version: 'detect',
     },
-    propWrapperFunctions: [
-      // The names of any function used to wrap propTypes, e.g. `forbidExtraProps`.
-      // If this isn't set, any propTypes wrapped in a function will be skipped.
-    ],
-    linkComponents: [
-      // Components used as alternatives to <a> for linking, eg. <Link to={ url } />.
-    ],
   },
 };
 
@@ -100,9 +49,16 @@ const tsConfig = {
   ...jsConfig,
   parser: '@typescript-eslint/parser',
   parserOptions: {
-    project: [relativeAppTsConfig, relativeTestTsConfig],
+    ecmaVersion: 2020,
+    sourceType: 'module',
+    project: ['./tsconfig.json'],
   },
-  plugins: [...jsConfig.plugins, '@typescript-eslint'],
+  env: {
+    es2020: true,
+    browser: true,
+    node: true,
+  },
+  plugins: ['@typescript-eslint'],
   extends: [
     ...jsConfig.extends,
     'plugin:@typescript-eslint/recommended',
@@ -119,20 +75,14 @@ const tsConfig = {
         'ts-expect-error': false,
       },
     ],
+    '@typescript-eslint/no-explicit-any': 'off',
     'react/prop-types': [0],
   },
 };
 
 module.exports = {
   root: true,
-  ignorePatterns: ['node_modules/**/*', `${relativeOutDir}/**/*`, '**/*.d.ts'],
-  parserOptions: {
-    ecmaVersion: 2018,
-  },
-  env: {
-    es2017: true,
-    node: true,
-  },
+  ignorePatterns: ['node_modules/**/*', 'dist/**/*', '**/*.d.ts'],
   extends: [
     'eslint:recommended',
     'prettier', // disable general eslint rules that can conflict with prettier
@@ -140,14 +90,20 @@ module.exports = {
   overrides: [
     {
       ...jsConfig,
-      files: [`${relativeClientDir}/**/*.@(js|mjs|jsx)`],
+      files: ['**/*.@(js|mjs|jsx)'],
+      excludedFiles: ['rollup.config.js'],
+    },
+    {
+      ...jsConfig,
+      parserOptions: {
+        sourceType: 'module',
+        ecmaVersion: 2018,
+      },
+      files: ['rollup.config.js'],
     },
     {
       ...tsConfig,
-      files: [`${relativeClientDir}/**/*.@(ts|tsx)`],
-    },
-    {
-      files: [`${relativeServerDir}/**/*.@(js|mjs)`],
+      files: ['lib/**/*.@(ts|tsx)'],
     },
   ],
 };

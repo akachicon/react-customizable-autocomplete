@@ -1,0 +1,21 @@
+{
+  "include": ["examples/**/*.ts", "examples/**/*.tsx"],
+  "compilerOptions": {
+    "noEmit": true,
+    "isolatedModules": true,
+    "jsx": "preserve",
+    "target": "ES2020",
+    "moduleResolution": "node",
+    "strict": true,
+    "allowSyntheticDefaultImports": true,
+    "baseUrl": ".",
+    "paths": {
+      "@akachicon/react-customizable-autocomplete": ["lib"],
+      "@akachicon/react-customizable-autocomplete/*": ["lib/*"]
+    },
+    "typeRoots": [
+      "node_modules/@types"
+    ],
+    "forceConsistentCasingInFileNames": true
+  }
+}
