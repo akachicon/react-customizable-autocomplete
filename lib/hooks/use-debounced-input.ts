@@ -1,4 +1,5 @@
-import { useState, useRef, useEffect, useMemo } from 'react';
+import { useRef, useEffect, useMemo } from 'react';
+import useState from 'react-use-batched-state';
 
 type ReturnType = {
   readonly value: string;

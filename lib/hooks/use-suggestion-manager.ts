@@ -1,4 +1,5 @@
-import { useRef, useState, useCallback } from 'react';
+import { useRef, useCallback } from 'react';
+import useState from 'react-use-batched-state';
 import usePersistentObject from './use-persistent-object';
 
 export type SuggestionId = string | null;
@@ -103,7 +104,6 @@ export default function useSuggestionManager<D = unknown>(): SuggestionManager<
     [selectId]
   );
 
-  // TODO: deoptimization
   if (selectedId !== null && !suggestions?.length) {
     selectId(null);
   }

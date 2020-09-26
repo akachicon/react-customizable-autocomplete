@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import useState from 'react-use-batched-state';
 import type { SuggestionId } from './use-suggestion-manager';
 
 // To preserve correctness of the form 'submit' event the following

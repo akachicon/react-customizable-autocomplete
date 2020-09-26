@@ -1,11 +1,11 @@
 import React, {
-  useState,
   useRef,
   useCallback,
   useEffect,
   useMemo,
   createElement,
 } from 'react';
+import useState from 'react-use-batched-state';
 
 import type {
   Suggestion,

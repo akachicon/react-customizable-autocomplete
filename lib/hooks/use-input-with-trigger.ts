@@ -1,4 +1,5 @@
-import { useState, useMemo, useRef } from 'react';
+import { useMemo, useRef } from 'react';
+import useState from 'react-use-batched-state';
 
 type ReturnType = {
   readonly trigger: Record<string, unknown>;

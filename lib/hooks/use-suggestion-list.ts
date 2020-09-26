@@ -1,4 +1,5 @@
-import React, { useState, useRef, useMemo } from 'react';
+import React, { useRef, useMemo } from 'react';
+import useState from 'react-use-batched-state';
 import usePersistentObject from './use-persistent-object';
 import type {
   ReadonlySuggestionManagerState,

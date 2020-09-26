@@ -1,4 +1,5 @@
-import { useCallback, useState, useRef } from 'react';
+import { useCallback, useRef } from 'react';
+import useState from 'react-use-batched-state';
 import usePersistentObject from '../use-persistent-object';
 import type { OnQueryReturnType } from './index';
 
