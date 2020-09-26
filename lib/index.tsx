@@ -373,7 +373,12 @@ export default function AutoCompleteSearch<D = unknown>({
     ]
   );
 
-  const isFetching = queryManager.state.isFetching;
+  // The time after a user changed the input but before the request
+  // was actually sent is also considered as 'fetching'.
+  const gteMinChars = input.value.trim().length >= minCharsRequired;
+  const inputMatch = input.value.trim() === debouncedInput.value.trim();
+  const isFetching =
+    gteMinChars && (queryManager.state.isFetching || !inputMatch);
   let listElement;
 
   if ('props' in suggestionList.list) {
