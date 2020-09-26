@@ -1,7 +1,6 @@
 import React, { useCallback } from 'react';
-import type { ListComponent as ListComponentType } from '../types';
-
-type Data = null;
+import type { ListComponentType } from '@akachicon/react-customizable-autocomplete/types';
+import type { Data } from './types';
 
 type ItemProps = {
   selected: boolean;
@@ -32,7 +31,7 @@ const ListItem = React.memo(function ListItem({
   );
 });
 
-const ListComponent: ListComponentType<Data> = function ListComponent({
+const List: ListComponentType<Data> = function List({
   suggestions,
   selectedId,
   suggestionHandlers: {
@@ -78,4 +77,4 @@ const ListComponent: ListComponentType<Data> = function ListComponent({
   );
 };
 
-export default ListComponent;
+export default List;

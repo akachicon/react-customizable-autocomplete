@@ -1,5 +1,6 @@
 const isDev = process.env.NODE_ENV === 'development';
 const isUmd = process.env.MODULE_FORMAT === 'umd';
+const isEs = process.env.MODULE_FORMAT === 'es';
 
 module.exports = {
   plugins: [
@@ -8,7 +9,7 @@ module.exports = {
       '@babel/transform-runtime',
       {
         regenerator: false,
-        useESModules: true,
+        useESModules: isEs,
         helpers: !isUmd,
         version: '^7.11.6',
       },
@@ -24,7 +25,7 @@ module.exports = {
   ],
   presets: [
     [
-      '@babel/preset-env',
+      '@babel/env',
       {
         targets: {
           ie: 11,
@@ -35,14 +36,14 @@ module.exports = {
       },
     ],
     [
-      '@babel/preset-react',
+      '@babel/react',
       {
         runtime: 'classic',
         development: isDev,
       },
     ],
     [
-      '@babel/preset-typescript',
+      '@babel/typescript',
       {
         allowDeclareFields: true,
         onlyRemoveTypeImports: true,

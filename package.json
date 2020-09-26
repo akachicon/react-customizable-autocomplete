@@ -13,7 +13,7 @@
   "repository": "https://github.com/akachicon/react-customizable-autocomplete",
   "homepage": "https://github.com/akachicon/react-customizable-autocomplete",
   "main": "dist/index.cjs.js",
-  "module": "dist/index.es.mjs",
+  "module": "dist/index.es.js",
   "directories": {
     "lib": "lib"
   },
@@ -44,9 +44,10 @@
     "lint:fix": "npm run prettier:fix && npm run eslint:fix"
   },
   "dependencies": {
-    "@babel/runtime-corejs3": "^7.11.2",
+    "@babel/runtime": "^7.11.2",
     "@types/react": "^16.9.49",
-    "react-use-batched-state": "^1.0.1"
+    "core-js-pure": "^3.6.5",
+    "react-use-batched-state": "^1.0.2"
   },
   "devDependencies": {
     "@babel/core": "^7.11.6",

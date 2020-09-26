@@ -36,8 +36,6 @@ import useKeyDown from './hooks/use-key-down';
 import useFormProps from './hooks/use-form-props';
 
 import { keys } from './constants';
-
-// TODO: debug
 import debug from './debug';
 
 type OnSubmitSignature<D = unknown> = (
@@ -150,13 +148,13 @@ export default function AutoCompleteSearch<D = unknown>({
     function onQueryResponse(...args: Parameters<OnDataSignature<D>>) {
       const [error, data] = args;
 
-      debug.log('selectId(null)');
+      debug.log('onQueryResponse: selectId(null)');
       suggestionManager.selectId(null);
 
-      debug.log('selectId(data)');
+      debug.log('onQueryResponse: selectId(data)');
       suggestionManager.setSuggestions(data);
 
-      debug.log('selectId(error)');
+      debug.log('onQueryResponse: selectId(error)');
       suggestionList.setError(error);
     },
     [suggestionManager, suggestionList]
@@ -356,8 +354,6 @@ export default function AutoCompleteSearch<D = unknown>({
         queryManager.performQuery(trimmedInput);
         return;
       }
-
-      // TODO: move to the manager
 
       if (suggestionManager.state.suggestions !== null) {
         suggestionManager.setSuggestions(null);

@@ -26,7 +26,13 @@ function getPlugins(babelOptions) {
 
 const baseConfig = {
   input: './lib/index.tsx',
-  external: [/@babel\/runtime/, /core-js-pure\//, 'react', 'react-dom'],
+  external: [
+    /@babel\/runtime/,
+    /core-js-pure\//,
+    'react',
+    'react-dom',
+    'react-use-batched-state',
+  ],
   plugins: getPlugins({
     exclude: /\/node_modules\//,
     extensions: ['.ts', '.tsx'],
@@ -38,7 +44,7 @@ const esConfig = {
   ...baseConfig,
   output: {
     format: 'es',
-    file: './dist/index.es.mjs',
+    file: './dist/index.es.js',
     interop: 'auto',
     indent: false,
     sourcemap: !isProd && 'inline',

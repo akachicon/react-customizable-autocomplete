@@ -1,5 +1,4 @@
 /node_modules/
 /dist/
 /.idea/
-**/*.d.ts
-!types/**/*.d.ts
+/types/lib/

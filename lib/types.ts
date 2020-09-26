@@ -10,10 +10,10 @@ export type {
 } from './hooks/use-query-manager';
 
 export type {
-  ListComponent,
-  MinCharsComponent,
-  NoResultsComponent,
-  ErrorComponent,
+  ListComponent as ListComponentType,
+  MinCharsComponent as MinCharsComponentType,
+  NoResultsComponent as NoResultsComponentType,
+  ErrorComponent as ErrorComponentType,
 } from './hooks/use-suggestion-list';
 
 import type {
@@ -22,7 +22,11 @@ import type {
   ListContainerComponent,
 } from './index';
 
-export type { AutocompleteProps, InputComponent, ListContainerComponent };
+export type {
+  AutocompleteProps,
+  InputComponent as InputComponentType,
+  ListContainerComponent as ListContainerComponentType,
+};
 
 export type AutocompleteComponentType<D = unknown> = (
   props: AutocompleteProps<D>

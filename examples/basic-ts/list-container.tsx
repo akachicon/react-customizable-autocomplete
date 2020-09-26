@@ -1,5 +1,5 @@
 import React from 'react';
-import type { ListContainerComponent as ListContainerComponentType } from '../types';
+import type { ListContainerComponentType } from '@akachicon/react-customizable-autocomplete/types';
 
 const ListContainerComponent: ListContainerComponentType = function ListContainerComponent({
   containerProps: { onMouseLeave },
@@ -18,7 +18,7 @@ const ListContainerComponent: ListContainerComponentType = function ListContaine
   return (
     <div style={wrapperStyle}>
       <div style={containerStyle} onMouseLeave={onMouseLeave}>
-        {isFetching && <div>loading...</div>}
+        {isFetching && <div>Loading...</div>}
         {children}
       </div>
     </div>

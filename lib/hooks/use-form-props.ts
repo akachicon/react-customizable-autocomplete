@@ -5,7 +5,7 @@ export type FormProps =
   | Omit<JSX.IntrinsicElements['form'], 'ref' | 'onSubmit'>
   | undefined;
 
-const isDev = process?.env?.NODE_ENV === 'development';
+const isDev = process.env.NODE_ENV === 'development';
 
 export default function useFormProps(props: FormProps): FormProps {
   return useMemo(
