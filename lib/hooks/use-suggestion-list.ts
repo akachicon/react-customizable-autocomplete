@@ -1,6 +1,7 @@
 import React, { useRef, useMemo } from 'react';
 import useState from 'react-use-batched-state';
 import usePersistentObject from './use-persistent-object';
+import debug from '../debug';
 import type {
   ReadonlySuggestionManagerState,
   SuggestionId,
@@ -68,6 +69,9 @@ export default function useSuggestionList<D = unknown>({
 
   const memoizedList = useMemo(
     function calcContainerComp() {
+      debug.log('calcContainerComp');
+      debug.log('gteMinChars', String(gteMinChars));
+
       if (!gteMinChars) {
         return { component: minCharsComponent };
       }

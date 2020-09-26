@@ -138,7 +138,7 @@ export default function AutoCompleteSearch<D = unknown>({
     minCharsComponent,
     noResultsComponent,
     errorComponent,
-    gteMinChars: debouncedInput.value.length >= minCharsRequired,
+    gteMinChars: input.value.length >= minCharsRequired,
     suggestionManagerState: suggestionManager.state,
     onSuggestionMouseDown: submitWithMouse,
     onSuggestionMouseOver: onMouseSelect,
@@ -347,7 +347,8 @@ export default function AutoCompleteSearch<D = unknown>({
 
   useEffect(
     function validateAndPerformQuery() {
-      console.log('query effect');
+      debug.log('validateAndPerformQuery');
+
       const trimmedInput = debouncedInput.value.trim();
 
       if (trimmedInput.length >= minCharsRequired) {

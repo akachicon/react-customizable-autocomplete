@@ -25,6 +25,7 @@
   "types": "types/index.cjs.d.ts",
   "scripts": {
     "build:es": "rollup -c --environment MODULE_FORMAT:es",
+    "build:es:watch": "cross-env NODE_ENV=development npm run build:es -- --watch",
     "build:cjs": "rollup -c --environment MODULE_FORMAT:cjs",
     "build:umd": "rollup -c --environment MODULE_FORMAT:umd",
     "build": "rimraf dist && npm run build:cjs && npm run build:es && npm run build:umd",
