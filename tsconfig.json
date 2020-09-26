@@ -1,11 +1,11 @@
 {
-  "include": ["**/*.ts", "**/*.tsx"],
+  "include": ["lib/**/*.ts", "lib/**/*.tsx"],
   "exclude": ["dist", "types", "examples"],
   "compilerOptions": {
     "incremental": true,
     "declaration": true,
     "emitDeclarationOnly": true,
-    "declarationDir": "types",
+    "declarationDir": "types/lib",
     "isolatedModules": true,
     "jsx": "preserve",
     "target": "ES2020",

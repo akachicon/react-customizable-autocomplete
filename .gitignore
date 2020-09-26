@@ -2,5 +2,4 @@
 /node_modules
 /.idea
 # TODO: check that /types/lib will end up in published package
-/types
-!/types/*.d.ts
+/types/lib
