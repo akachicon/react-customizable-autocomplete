@@ -102,7 +102,7 @@ export default function AutoCompleteSearch<D = unknown>({
 
   const formRef = useRef<HTMLFormElement | null>(null);
   const inputRef = useRef<HTMLInputElement | null>(null);
-  const [focus, setFocus] = useState(false);
+  const [showList, setShowList] = useState(false);
 
   const input = useInput();
   const perceivedInput = useInputWithTrigger();
@@ -171,11 +171,11 @@ export default function AutoCompleteSearch<D = unknown>({
     onData: onQueryResponse,
   });
 
-  const blurInput = useCallback(
-    function blurInput() {
-      inputRef.current?.blur();
+  const onEscapeDown = useCallback(
+    function onEscapeDown() {
       perceivedInput.value = input.value;
       suggestionManager.selectId(null);
+      setShowList(false);
     },
     [perceivedInput, input, suggestionManager]
   );
@@ -225,14 +225,14 @@ export default function AutoCompleteSearch<D = unknown>({
   const keyMap = useMemo(
     function genKeyMap() {
       return {
-        [ESCAPE]: blurInput,
+        [ESCAPE]: onEscapeDown,
         [ENTER]: submitWithKeyboard,
         [ARROW_UP]: selectPreviousSuggestion,
         [ARROW_DOWN]: selectNextSuggestion,
       };
     },
     [
-      blurInput,
+      onEscapeDown,
       submitWithKeyboard,
       selectPreviousSuggestion,
       selectNextSuggestion,
@@ -261,6 +261,7 @@ export default function AutoCompleteSearch<D = unknown>({
         return;
       }
       updateInput(e.currentTarget.value);
+      setShowList(true);
     },
     [submitLocker, updateInput]
   );
@@ -321,11 +322,11 @@ export default function AutoCompleteSearch<D = unknown>({
   );
 
   const onFocus = useCallback(function onFocus() {
-    setFocus(true);
+    setShowList(true);
   }, []);
 
   const onBlur = useCallback(function onBlur() {
-    setFocus(false);
+    setShowList(false);
   }, []);
 
   const formProps = useFormProps(consumerFormProps);
@@ -428,7 +429,7 @@ export default function AutoCompleteSearch<D = unknown>({
       <ListContainerComponent
         containerProps={listContainerProps}
         isFetching={isFetching}
-        isOpen={focus}
+        isOpen={showList}
         submit={submitWithKeyboard}
       >
         {listElement}
