@@ -41,27 +41,28 @@ import debug from './debug';
 
 type OnSubmitSignature<D = unknown> = (
   args: {
-    id: SuggestionId;
     query: string;
-    suggestions: SuggestionList<D> | null;
-    resetInput: () => void;
+    id?: SuggestionId;
+    suggestions?: SuggestionList<D> | null;
+    resetInput?: () => void;
   },
   event: React.FormEvent<HTMLFormElement>
 ) => void;
 
 export type InputComponent = React.ComponentType<{
   inputProps: JSX.IntrinsicElements['input'];
-  isFetching: boolean;
-  reset: () => void;
+  isFetching?: boolean;
+  submit?: () => void;
+  reset?: () => void;
 }>;
 
 export type ListContainerComponent = React.ComponentType<{
   containerProps: {
     onMouseLeave: React.MouseEventHandler;
   };
-  isFetching: boolean;
-  isOpen: boolean;
-  submit: () => void;
+  isOpen?: boolean;
+  isFetching?: boolean;
+  submit?: () => void;
 }>;
 
 export type Props<D = unknown> = {
@@ -170,9 +171,14 @@ export default function AutoCompleteSearch<D = unknown>({
     onData: onQueryResponse,
   });
 
-  const blurInput = useCallback(function blurInput() {
-    inputRef.current?.blur();
-  }, []);
+  const blurInput = useCallback(
+    function blurInput() {
+      inputRef.current?.blur();
+      perceivedInput.value = input.value;
+      suggestionManager.selectId(null);
+    },
+    [perceivedInput, input, suggestionManager]
+  );
 
   const submitWithKeyboard = useCallback(
     function submitWithKeyboard() {
@@ -416,6 +422,7 @@ export default function AutoCompleteSearch<D = unknown>({
       <InputComponent
         inputProps={inputProps}
         isFetching={isFetching}
+        submit={submitWithKeyboard}
         reset={resetInput}
       />
       <ListContainerComponent
