@@ -44,6 +44,7 @@ type OnSubmitSignature<D = unknown> = (
     id: SuggestionId;
     query: string;
     suggestions: SuggestionList<D> | null;
+    resetInput: () => void;
   },
   event: React.FormEvent<HTMLFormElement>
 ) => void;
@@ -51,6 +52,7 @@ type OnSubmitSignature<D = unknown> = (
 export type InputComponent = React.ComponentType<{
   inputProps: JSX.IntrinsicElements['input'];
   isFetching: boolean;
+  reset: () => void;
 }>;
 
 export type ListContainerComponent = React.ComponentType<{
@@ -59,6 +61,7 @@ export type ListContainerComponent = React.ComponentType<{
   };
   isFetching: boolean;
   isOpen: boolean;
+  submit: () => void;
 }>;
 
 export type Props<D = unknown> = {
@@ -87,7 +90,7 @@ export default function AutoCompleteSearch<D = unknown>({
   preserveInputOnSubmit = true,
   debounceMs = 150,
   minCharsRequired = 3,
-  inputComponent: Input,
+  inputComponent: InputComponent,
   listContainerComponent: ListContainerComponent,
   listComponent,
   minCharsComponent,
@@ -232,22 +235,36 @@ export default function AutoCompleteSearch<D = unknown>({
 
   const onKeyDown = useKeyDown(keyMap);
 
+  const updateInput = useCallback(
+    function updateInput(value: string) {
+      if (value.trim().length < minCharsRequired) {
+        queryManager.disposeQueries();
+      }
+      submitLocker.lastKeyboardId = null;
+      submitLocker.lastMouseId = null;
+      input.value = value;
+      perceivedInput.value = value;
+    },
+    [minCharsRequired, queryManager, submitLocker, input, perceivedInput]
+  );
+
   const onChange = useCallback(
     function onChange(e: React.ChangeEvent<HTMLInputElement>) {
       if (submitLocker.isLocked) {
         e.preventDefault();
         return;
       }
-      const { value } = e.currentTarget;
-
-      if (value.trim().length < minCharsRequired) {
-        queryManager.disposeQueries();
-      }
-      submitLocker.lastKeyboardId = null;
-      input.value = value;
-      perceivedInput.value = value;
+      updateInput(e.currentTarget.value);
     },
-    [minCharsRequired, submitLocker, queryManager, input, perceivedInput]
+    [submitLocker, updateInput]
+  );
+
+  const resetInput = useCallback(
+    function resetInput() {
+      if (submitLocker.isLocked) return;
+      updateInput('');
+    },
+    [submitLocker, updateInput]
   );
 
   const onSubmit = useCallback(
@@ -265,6 +282,7 @@ export default function AutoCompleteSearch<D = unknown>({
           id,
           query: perceivedInput.value,
           suggestions: suggestionManager.state.suggestions,
+          resetInput,
         },
         e
       );
@@ -292,6 +310,7 @@ export default function AutoCompleteSearch<D = unknown>({
       suggestionManager,
       suggestionList,
       queryManager,
+      resetInput,
     ]
   );
 
@@ -394,11 +413,16 @@ export default function AutoCompleteSearch<D = unknown>({
 
   return (
     <form ref={formRef} onSubmit={onSubmit} {...formProps}>
-      <Input inputProps={inputProps} isFetching={isFetching} />
+      <InputComponent
+        inputProps={inputProps}
+        isFetching={isFetching}
+        reset={resetInput}
+      />
       <ListContainerComponent
         containerProps={listContainerProps}
         isFetching={isFetching}
         isOpen={focus}
+        submit={submitWithKeyboard}
       >
         {listElement}
       </ListContainerComponent>
