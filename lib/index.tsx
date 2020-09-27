@@ -34,6 +34,7 @@ import useSuggestionList from './hooks/use-suggestion-list';
 import useQueryManager from './hooks/use-query-manager';
 import useKeyDown from './hooks/use-key-down';
 import useFormProps from './hooks/use-form-props';
+import useIsFetching from './hooks/use-is-fetching';
 
 import { keys } from './constants';
 import debug from './debug';
@@ -319,6 +320,13 @@ export default function AutoCompleteSearch<D = unknown>({
     [inputRef, perceivedInput.value, onChange, onFocus, onBlur, onKeyDown]
   );
 
+  const isFetching = useIsFetching({
+    gteMinChars: input.value.trim().length >= minCharsRequired,
+    isRequestInFlight: queryManager.state.isFetching,
+    inputValue: input.value.trim(),
+    debouncedInputValue: debouncedInput.value.trim(),
+  });
+
   const listContainerProps = useMemo(
     function inputProps() {
       return {
@@ -373,12 +381,6 @@ export default function AutoCompleteSearch<D = unknown>({
     ]
   );
 
-  // The time after a user changed the input but before the request
-  // was actually sent is also considered as 'fetching'.
-  const gteMinChars = input.value.trim().length >= minCharsRequired;
-  const inputMatch = input.value.trim() === debouncedInput.value.trim();
-  const isFetching =
-    gteMinChars && (queryManager.state.isFetching || !inputMatch);
   let listElement;
 
   if ('props' in suggestionList.list) {
