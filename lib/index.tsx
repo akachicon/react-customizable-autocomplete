@@ -3,10 +3,11 @@ import React, {
   useCallback,
   useEffect,
   useMemo,
-  createElement,
+  createElement
 } from 'react';
 import useState from 'react-use-batched-state';
 
+import type { MutableRefObject } from 'react';
 import type {
   Suggestion,
   SuggestionId,
@@ -39,30 +40,43 @@ import useIsFetching from './hooks/use-is-fetching';
 import { keys } from './constants';
 import debug from './debug';
 
-type OnSubmitSignature<D = unknown> = (
+export type OnSubmitSignature<D = unknown> = (
   args: {
     query: string;
-    id?: SuggestionId;
-    suggestions?: SuggestionList<D> | null;
-    resetInput?: () => void;
+    id: SuggestionId;
+    suggestions: SuggestionList<D> | null;
+    resetInput: () => void;
   },
   event: React.FormEvent<HTMLFormElement>
 ) => void;
 
-export type InputComponent = React.ComponentType<{
-  inputProps: JSX.IntrinsicElements['input'];
-  isFetching?: boolean;
-  submit?: () => void;
-  reset?: () => void;
+export type InputComponent<D = unknown> = React.ComponentType<{
+  inputProps: Pick<
+    JSX.IntrinsicElements['input'],
+    | 'value'
+    | 'onChange'
+    | 'onFocus'
+    | 'onBlur'
+    | 'onKeyDown'
+    | 'autoComplete'
+  > & {
+    ref: MutableRefObject<HTMLInputElement | null>
+  };
+  selectedItem: Suggestion<D> | null;
+  isFetching: boolean;
+  isOpen: boolean;
+  submit: () => void;
+  reset: () => void;
 }>;
 
-export type ListContainerComponent = React.ComponentType<{
+export type ListContainerComponent<D = unknown> = React.ComponentType<{
   containerProps: {
     onMouseLeave: React.MouseEventHandler;
   };
-  isOpen?: boolean;
-  isFetching?: boolean;
-  submit?: () => void;
+  selectedItem: Suggestion<D> | null;
+  isOpen: boolean;
+  isFetching: boolean;
+  submit: () => void;
 }>;
 
 export type Props<D = unknown> = {
@@ -407,6 +421,8 @@ export default function AutoCompleteSearch<D = unknown>({
     ]
   );
 
+  const selectedId = suggestionManager.state.selectedId;
+  const selectedItem = suggestionManager.getSuggestionById(selectedId);
   let listElement;
 
   if ('props' in suggestionList.list) {
@@ -422,12 +438,15 @@ export default function AutoCompleteSearch<D = unknown>({
     <form ref={formRef} onSubmit={onSubmit} {...formProps}>
       <InputComponent
         inputProps={inputProps}
+        selectedItem={selectedItem}
         isFetching={isFetching}
+        isOpen={showList}
         submit={submitWithKeyboard}
         reset={resetInput}
       />
       <ListContainerComponent
         containerProps={listContainerProps}
+        selectedItem={selectedItem}
         isFetching={isFetching}
         isOpen={showList}
         submit={submitWithKeyboard}

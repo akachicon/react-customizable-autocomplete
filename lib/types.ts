@@ -18,12 +18,14 @@ export type {
 
 import type {
   Props as AutocompleteProps,
+  OnSubmitSignature,
   InputComponent,
   ListContainerComponent,
 } from './index';
 
 export type {
   AutocompleteProps,
+  OnSubmitSignature,
   InputComponent as InputComponentType,
   ListContainerComponent as ListContainerComponentType,
 };

@@ -7,7 +7,7 @@ export type SuggestionId = string | null;
 export type Suggestion<D = unknown> = Readonly<{
   id: NonNullable<SuggestionId>;
   text: string;
-  data: D;
+  data?: D;
 }>;
 
 export type SuggestionList<D = unknown> = readonly Suggestion<D>[];
@@ -24,17 +24,20 @@ export type ReadonlySuggestionManagerState<D = unknown> = Readonly<
 type SuggestionManager<D = unknown> = Readonly<{
   state: ReadonlySuggestionManagerState<D>;
   setSuggestions: (suggestions: SuggestionList<D> | null) => void;
-  getSuggestionById: (id: NonNullable<SuggestionId>) => Suggestion<D> | null;
+  getSuggestionById: (id: SuggestionId) => Suggestion<D> | null;
   selectId: (id: SuggestionId) => boolean;
   selectPrevious: () => Suggestion<D> | null;
   selectNext: () => Suggestion<D> | null;
 }>;
+
+type SuggestionMap = Record<NonNullable<SuggestionId>, Suggestion<any>>;
 
 export default function useSuggestionManager<D = unknown>(): SuggestionManager<
   D
 > {
   const [selectedId, setSelectedId] = useState<SuggestionId>(null);
   const [suggestions, setSuggestions] = useState<SuggestionList<D> | null>([]);
+  const suggestionMap = useRef<SuggestionMap>({});
 
   const state = useRef<SuggestionManagerState<D>>({
     suggestions,
@@ -44,21 +47,23 @@ export default function useSuggestionManager<D = unknown>(): SuggestionManager<
   state.current.selectedId = selectedId;
 
   const getSuggestionById = useCallback(function getSuggestionById(
-    id: NonNullable<SuggestionId>
+    id: SuggestionId
   ) {
-    return state.current.suggestions?.find((s) => s.id === id) ?? null;
+    if (id === null) {
+      return null;
+    }
+    return suggestionMap.current[id] ?? null;
   },
   []);
 
   const selectId = useCallback(function selectId(id: SuggestionId) {
-    const isNull = id === null;
-    const doesExist = state.current.suggestions?.some((s) => s.id === id);
+    const isAcceptable =
+      id === null ? true : Boolean(suggestionMap.current[id]);
 
-    if (isNull || doesExist) {
-      setSelectedId(id);
-      return true;
-    }
-    return false;
+    if (!isAcceptable) return false;
+
+    setSelectedId(id);
+    return true;
   }, []);
 
   const selectPrevious = useCallback(
@@ -104,13 +109,32 @@ export default function useSuggestionManager<D = unknown>(): SuggestionManager<
     [selectId]
   );
 
+  const updateSuggestions = useCallback(function updateSuggestions(
+    suggestions: SuggestionList<D> | null
+  ) {
+    setSuggestions(suggestions);
+
+    if (!suggestions) {
+      suggestionMap.current = {};
+      return;
+    }
+    suggestionMap.current = suggestions.reduce<SuggestionMap>(
+      function saveSuggestionToMap(acc, s) {
+        acc[s.id] = s;
+        return acc;
+      },
+      {}
+    );
+  },
+  []);
+
   if (selectedId !== null && !suggestions?.length) {
     selectId(null);
   }
 
   return usePersistentObject({
     state: state.current,
-    setSuggestions,
+    setSuggestions: updateSuggestions,
     getSuggestionById,
     selectId,
     selectPrevious,
