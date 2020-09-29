@@ -76,7 +76,7 @@ const umdConfig = {
   output: {
     format: 'umd',
     file: isProd ? './dist/index.umd.min.js' : './dist/index.umd.js',
-    name: 'CustomizableAutocomplete',
+    name: 'ReactCustomizableAutocomplete',
     globals: {
       react: 'React',
       'react-dom': 'ReactDOM',
