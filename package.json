@@ -1,6 +1,6 @@
 {
   "name": "react-customizable-autocomplete",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "description": "Fully customizable react autocomplete",
   "keywords": [
     "react",
@@ -19,8 +19,7 @@
   },
   "files": [
     "dist",
-    "types",
-    "examples"
+    "types"
   ],
   "types": "types/index.cjs.d.ts",
   "husky": {

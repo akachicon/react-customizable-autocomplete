@@ -4,8 +4,6 @@ import replace from '@rollup/plugin-replace';
 import babel from '@rollup/plugin-babel';
 import { terser } from 'rollup-plugin-terser';
 
-// TODO: write publishing script
-
 const isProd = process.env.NODE_ENV === 'production';
 
 const resolveOptions = {
