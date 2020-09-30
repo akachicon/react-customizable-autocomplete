@@ -12,8 +12,13 @@ export type Suggestion<D = unknown> = Readonly<{
 
 export type SuggestionList<D = unknown> = readonly Suggestion<D>[];
 
+export type SuggestionListState<D = unknown> =
+  | SuggestionList<D>
+  | null
+  | undefined;
+
 type SuggestionManagerState<D> = {
-  suggestions: SuggestionList<D> | null;
+  suggestions: SuggestionListState<D>;
   selectedId: SuggestionId;
 };
 
@@ -23,7 +28,7 @@ export type ReadonlySuggestionManagerState<D = unknown> = Readonly<
 
 type SuggestionManager<D = unknown> = Readonly<{
   state: ReadonlySuggestionManagerState<D>;
-  setSuggestions: (suggestions: SuggestionList<D> | null) => void;
+  setSuggestions: (suggestions: SuggestionListState<D>) => void;
   getSuggestionById: (id: SuggestionId) => Suggestion<D> | null;
   selectId: (id: SuggestionId) => boolean;
   selectPrevious: () => Suggestion<D> | null;
@@ -36,7 +41,7 @@ export default function useSuggestionManager<D = unknown>(): SuggestionManager<
   D
 > {
   const [selectedId, setSelectedId] = useState<SuggestionId>(null);
-  const [suggestions, setSuggestions] = useState<SuggestionList<D> | null>([]);
+  const [suggestions, setSuggestions] = useState<SuggestionListState<D>>([]);
   const suggestionMap = useRef<SuggestionMap>({});
 
   const state = useRef<SuggestionManagerState<D>>({
@@ -110,7 +115,7 @@ export default function useSuggestionManager<D = unknown>(): SuggestionManager<
   );
 
   const updateSuggestions = useCallback(function updateSuggestions(
-    suggestions: SuggestionList<D> | null
+    suggestions: SuggestionListState<D>
   ) {
     setSuggestions(suggestions);
 

@@ -3,7 +3,7 @@ import React, {
   useCallback,
   useEffect,
   useMemo,
-  createElement
+  createElement,
 } from 'react';
 import useState from 'react-use-batched-state';
 
@@ -11,7 +11,7 @@ import type { MutableRefObject } from 'react';
 import type {
   Suggestion,
   SuggestionId,
-  SuggestionList,
+  SuggestionListState,
 } from './hooks/use-suggestion-manager';
 import type {
   OnQuerySignature,
@@ -44,7 +44,7 @@ export type OnSubmitSignature<D = unknown> = (
   args: {
     query: string;
     id: SuggestionId;
-    suggestions: SuggestionList<D> | null;
+    suggestions: SuggestionListState<D> | null;
     resetInput: () => void;
   },
   event: React.FormEvent<HTMLFormElement>
@@ -53,14 +53,9 @@ export type OnSubmitSignature<D = unknown> = (
 export type InputComponent<D = unknown> = React.ComponentType<{
   inputProps: Pick<
     JSX.IntrinsicElements['input'],
-    | 'value'
-    | 'onChange'
-    | 'onFocus'
-    | 'onBlur'
-    | 'onKeyDown'
-    | 'autoComplete'
+    'value' | 'onChange' | 'onFocus' | 'onBlur' | 'onKeyDown' | 'autoComplete'
   > & {
-    ref: MutableRefObject<HTMLInputElement | null>
+    ref: MutableRefObject<HTMLInputElement | null>;
   };
   selectedItem: Suggestion<D> | null;
   isFetching: boolean;
@@ -187,6 +182,17 @@ export default function AutoCompleteSearch<D = unknown>({
     function onEscapeDown() {
       perceivedInput.value = input.value;
       suggestionManager.selectId(null);
+
+      // TODO:
+      //  After a user pressed 'Escape' and then started typing again
+      //  but before the query is resolved we should either show special
+      //  loading message or don't show anything (since last results are
+      //  obsolete, and we cannot say there is no results for the query,
+      //  or for the user to start typing, since they already do). For now
+      //  we choose the latter and use undefined value to preserve falsy
+      //  checks, but it could be done better.
+
+      suggestionManager.setSuggestions(undefined);
       setShowList(false);
     },
     [perceivedInput, input, suggestionManager]
@@ -318,7 +324,6 @@ export default function AutoCompleteSearch<D = unknown>({
     },
     [
       consumerOnSubmit,
-      input,
       perceivedInput,
       submitLocker,
       suggestionManager,
@@ -418,7 +423,9 @@ export default function AutoCompleteSearch<D = unknown>({
   const selectedItem = suggestionManager.getSuggestionById(selectedId);
   let listElement;
 
-  if ('props' in suggestionList.list) {
+  if (!suggestionList.list.component) {
+    listElement = null;
+  } else if ('props' in suggestionList.list) {
     listElement = createElement(
       suggestionList.list.component,
       suggestionList.list.props
@@ -427,13 +434,15 @@ export default function AutoCompleteSearch<D = unknown>({
     listElement = createElement(suggestionList.list.component);
   }
 
+  const isOpen = showList && Boolean(listElement);
+
   return (
     <form ref={formRef} onSubmit={onSubmit} {...formProps}>
       <InputComponent
         inputProps={inputProps}
         selectedItem={selectedItem}
         isFetching={isFetching}
-        isOpen={showList}
+        isOpen={isOpen}
         submit={submitWithKeyboard}
         reset={resetInput}
       />
@@ -441,7 +450,7 @@ export default function AutoCompleteSearch<D = unknown>({
         containerProps={listContainerProps}
         selectedItem={selectedItem}
         isFetching={isFetching}
-        isOpen={showList}
+        isOpen={isOpen}
         submit={submitWithKeyboard}
       >
         {listElement}

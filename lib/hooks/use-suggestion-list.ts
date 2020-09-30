@@ -47,7 +47,11 @@ type SuggestionList<D = unknown> = {
         props: ListComponentProps<D>;
       }
     | {
-        component: MinCharsComponent | NoResultsComponent | ErrorComponent;
+        component:
+          | MinCharsComponent
+          | NoResultsComponent
+          | ErrorComponent
+          | null;
       };
 };
 
@@ -70,7 +74,6 @@ export default function useSuggestionList<D = unknown>({
   const memoizedList = useMemo(
     function calcContainerComp() {
       debug.log('calcContainerComp');
-      debug.log('gteMinChars', String(gteMinChars));
 
       if (!gteMinChars) {
         return { component: minCharsComponent };
@@ -82,11 +85,11 @@ export default function useSuggestionList<D = unknown>({
 
       // Since suggestions are immutable we can perform
       // length check safely.
-      if (suggestions !== null && suggestions.length) {
+      if (!!suggestions && suggestions.length) {
         return {
           component: listComponent,
           props: {
-            suggestions,
+            suggestions: suggestions,
             selectedId,
             suggestionHandlers: {
               onMouseOver: onSuggestionMouseOver,
@@ -98,8 +101,12 @@ export default function useSuggestionList<D = unknown>({
 
       // Since suggestions are immutable we can perform
       // length check safely.
-      if (suggestions !== null && !suggestions.length) {
+      if (!!suggestions && !suggestions.length) {
         return { component: noResultsComponent };
+      }
+
+      if (suggestions === undefined) {
+        return { component: null };
       }
 
       // The case where we are past min chars but
