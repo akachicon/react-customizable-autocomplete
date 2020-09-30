@@ -84,7 +84,6 @@ export type Props<D = unknown> = {
   onQueryBecomesObsolete?: OnQueryBecomesObsoleteSignature<D>;
   onSubmit: OnSubmitSignature<D>;
   formProps?: FormProps;
-  preserveInputOnSubmit?: boolean;
   debounceMs?: number;
   minCharsRequired?: number;
   inputComponent: InputComponent;
@@ -102,7 +101,6 @@ export default function AutoCompleteSearch<D = unknown>({
   onQueryBecomesObsolete,
   onSubmit: consumerOnSubmit,
   formProps: consumerFormProps,
-  preserveInputOnSubmit = true,
   debounceMs = 150,
   minCharsRequired = 3,
   inputComponent: InputComponent,
@@ -298,6 +296,10 @@ export default function AutoCompleteSearch<D = unknown>({
           ? submitLocker.lastKeyboardId
           : submitLocker.lastMouseId;
 
+      submitLocker.release();
+      submitLocker.lastKeyboardId = null;
+      submitLocker.lastMouseId = null;
+
       consumerOnSubmit(
         {
           id,
@@ -308,23 +310,14 @@ export default function AutoCompleteSearch<D = unknown>({
         e
       );
 
-      submitLocker.release();
-      submitLocker.lastKeyboardId = null;
-      submitLocker.lastMouseId = null;
-
       suggestionManager.setSuggestions(null);
       suggestionManager.selectId(null);
 
-      if (!preserveInputOnSubmit) {
-        perceivedInput.value = '';
-      }
-      input.value = '';
       suggestionList.setError(false);
       inputRef.current?.blur();
     },
     [
       consumerOnSubmit,
-      preserveInputOnSubmit,
       input,
       perceivedInput,
       submitLocker,
