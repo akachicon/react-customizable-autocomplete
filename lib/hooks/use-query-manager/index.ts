@@ -25,8 +25,8 @@ type QueryManagerArgs<D = unknown> = {
   onData: OnDataSignature<D>;
 };
 
-type QueryManager<D = unknown> = Readonly<{
-  state: ReadonlyExposedManagerState<D>;
+type QueryManager = Readonly<{
+  state: ReadonlyExposedManagerState;
   disposeQueries: () => void;
   performQuery: (query: string) => void;
 }>;
@@ -35,7 +35,7 @@ export default function useQueryManager<D>({
   onQuery,
   onQueryBecomesObsolete,
   onData,
-}: QueryManagerArgs<D>): QueryManager<D> {
+}: QueryManagerArgs<D>): QueryManager {
   const { state, exposedState, setState } = useManagerState<D>();
 
   const makeQueryObsolete = useCallback(

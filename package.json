@@ -23,6 +23,11 @@
     "examples"
   ],
   "types": "types/index.cjs.d.ts",
+  "husky": {
+    "hooks": {
+      "pre-commit": "npm run ts:compile && npm run --silent lint"
+    }
+  },
   "scripts": {
     "build:es": "rollup -c --environment MODULE_FORMAT:es",
     "build:es:watch": "cross-env NODE_ENV=development npm run build:es -- --watch",
@@ -42,7 +47,8 @@
     "eslint": "eslint --ext .ts,.tsx,.js,.mjs,.jsx .",
     "eslint:fix": "npm run eslint -- --fix",
     "lint": "npm run prettier && npm run eslint",
-    "lint:fix": "npm run prettier:fix && npm run eslint:fix"
+    "lint:fix": "npm run prettier:fix && npm run eslint:fix",
+    "prepublishOnly": "npm run build:prod"
   },
   "dependencies": {
     "@babel/runtime": "^7.11.2",
@@ -70,6 +76,7 @@
     "eslint": "^7.9.0",
     "eslint-config-prettier": "^6.11.0",
     "eslint-plugin-react-hooks": "^4.1.2",
+    "husky": "^4.3.0",
     "prettier": "^2.1.2",
     "regex-escape": "^3.4.10",
     "replace-in-files": "^2.0.3",

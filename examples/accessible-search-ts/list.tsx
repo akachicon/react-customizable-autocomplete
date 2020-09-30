@@ -1,5 +1,7 @@
 import React, { useCallback } from 'react';
-import type { ListComponentType } from '@akachicon/react-customizable-autocomplete/types';
+import type { ListComponentType } from 'react-customizable-autocomplete/types';
+import { listboxId, labelId } from './constants';
+import stl from './styles.scss';
 import type { Data } from './types';
 
 type ItemProps = {
@@ -17,17 +19,23 @@ const ListItem = React.memo(function ListItem({
   onMouseOver,
   text,
 }: ItemProps): JSX.Element {
-  const backgroundColor = selected ? 'lightgrey' : 'transparent';
+  const className = [
+    stl['suggestions__item'],
+    selected ? stl['suggestions__item_selected'] : '',
+  ].join(' ');
 
   return (
-    <div
-      style={{ backgroundColor }}
+    <li
+      id={dataAutocompleteId}
+      className={className}
       data-autocomplete-id={dataAutocompleteId}
+      role="option"
+      aria-selected={selected}
       onMouseDown={onMouseDown}
       onMouseOver={onMouseOver}
     >
       {text}
-    </div>
+    </li>
   );
 });
 
@@ -60,7 +68,12 @@ const List: ListComponentType<Data> = function List({
   );
 
   return (
-    <>
+    <ul
+      id={listboxId}
+      className={stl['suggestions__list']}
+      aria-labelledby={labelId}
+      role="listbox"
+    >
       {suggestions.map(function renderSuggestion(s) {
         return (
           <ListItem
@@ -73,7 +86,7 @@ const List: ListComponentType<Data> = function List({
           />
         );
       })}
-    </>
+    </ul>
   );
 };
 

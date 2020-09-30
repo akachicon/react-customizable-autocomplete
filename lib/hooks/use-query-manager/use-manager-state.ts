@@ -29,17 +29,15 @@ type MergedState<D = unknown> = Partial<
   }
 >;
 
-type ExposedManagerState<D = unknown> = {
+type ExposedManagerState = {
   isFetching: boolean;
 };
 
-export type ReadonlyExposedManagerState<D = unknown> = Readonly<
-  ExposedManagerState<D>
->;
+export type ReadonlyExposedManagerState = Readonly<ExposedManagerState>;
 
 type QueryManagerState<D = unknown> = Readonly<{
   state: ReadonlyManagerState<D>;
-  exposedState: ReadonlyExposedManagerState<D>;
+  exposedState: ReadonlyExposedManagerState;
   setState: (mergedState: MergedState<D>) => ReadonlyManagerState<D>;
 }>;
 
@@ -56,7 +54,7 @@ export default function useManagerState<D>(): QueryManagerState<D> {
   const [state] = useState(() => ({ current: getFreshState() }));
   const [isFetching, setIsFetching] = useState(false);
 
-  const exposedState = useRef<ExposedManagerState<D>>({ isFetching });
+  const exposedState = useRef<ExposedManagerState>({ isFetching });
   exposedState.current.isFetching = isFetching;
 
   const setState = useCallback(

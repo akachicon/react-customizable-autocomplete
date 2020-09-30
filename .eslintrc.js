@@ -51,7 +51,7 @@ const tsConfig = {
   parserOptions: {
     ecmaVersion: 2020,
     sourceType: 'module',
-    project: ['./tsconfig.json'],
+    project: ['tsconfig.json'],
   },
   env: {
     es2020: true,
@@ -104,6 +104,14 @@ module.exports = {
     {
       ...tsConfig,
       files: ['lib/**/*.@(ts|tsx)'],
+    },
+    {
+      ...tsConfig,
+      parserOptions: {
+        ...tsConfig.parserOptions,
+        project: ['tsconfig.examples.json'],
+      },
+      files: ['examples/**/*.@(ts|tsx)'],
     },
   ],
 };

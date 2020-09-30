@@ -1,5 +1,5 @@
 {
-  "include": ["examples/**/*.ts", "examples/**/*.tsx"],
+  "include": ["examples/**/*.ts", "examples/**/*.tsx", "examples/**/*.json"],
   "compilerOptions": {
     "noEmit": true,
     "isolatedModules": true,
@@ -10,12 +10,13 @@
     "allowSyntheticDefaultImports": true,
     "baseUrl": ".",
     "paths": {
-      "@akachicon/react-customizable-autocomplete": ["lib"],
-      "@akachicon/react-customizable-autocomplete/*": ["lib/*"]
+      "react-customizable-autocomplete": ["lib"],
+      "react-customizable-autocomplete/*": ["lib/*"]
     },
     "typeRoots": [
       "node_modules/@types"
     ],
-    "forceConsistentCasingInFileNames": true
+    "forceConsistentCasingInFileNames": true,
+    "resolveJsonModule": true
   }
 }
