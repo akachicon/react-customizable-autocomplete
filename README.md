@@ -65,7 +65,7 @@ result. During the execution of `onQueryBecomesObsolete` callback it's safe to
 reject the promise: `errorComponent` won't be shown to the user.
 
 #### `onSubmit: ({ query, id, suggestions, resetInput }, formEvent) => void`
-Is called when the user submits the forms.
+Is called when the user submits the form.
 
 - `query: string` - the input that user submits.
 
