@@ -50,17 +50,13 @@ If the promise of the last `onQuery` is rejected, `errorComponent` will be rende
 If the reject happens after submission, or when the required number of characters 
 is not enough to fulfill `minCharsRequired`, then `errorComponent` won't be rendered.
 
-##### `query: string`
-The input for which `onQuery` is called.  
+- `query: string` - the input for which `onQuery` is called.  
 
-##### `id: string`
-Used internally for managing suggestions. 
+- `id: string` - used internally for managing suggestions. 
 
-##### `text: string`
-Placed in the input while user navigates with a keyboard. 
+- `text: string` - placed in the input while user navigates with a keyboard. 
 
-##### `data?: any`
-A place to store additional information about a suggestion so that we 
+- `data?: any` - a place to store additional information about a suggestion so that we 
 could render custom suggestion components (e.g. text with an image).   
 
 #### `onQueryBecomesObsolete?`: `(onQueryResult) => void`
@@ -71,24 +67,19 @@ reject the promise: `errorComponent` won't be shown to the user.
 #### `onSubmit: ({ query, id, suggestions, resetInput }, formEvent) => void`
 Is called when the user submits the forms.
 
-##### `query: string`
-The input that user submits.
+- `query: string` - the input that user submits.
 
-##### `id: string | null`
-If the user submits by selection of one of the suggestions, the corresponding id 
+- `id: string | null` - if the user submits by selection of one of the suggestions, the corresponding id 
 from `onQuery` result will be passed, otherwise `null`.
 
-##### `suggestions`
-The `onQuery` result. E.g. if the query matches the first suggestion you might 
+- `suggestions` - the `onQuery` result. E.g. if the query matches the first suggestion you might 
 want to redirect user to the suggestion page directly. 
 
-##### `resetInput: () => void` 
-A callback that cleans the input. It allows cleaning input *after* additional 
+- `resetInput: () => void` - a callback that cleans the input. It allows cleaning input *after* additional 
 submission request, e.g. after the user submits specific suggestion, you fetch 
 page result and only then clean the input.
 
-##### `formEvent`
-The original React form submit event. 
+- `formEvent` - the original React form submit event. 
 
 #### `formProps?`
 Additional props to be passed to the `form` element. The only two forbidden 
@@ -106,63 +97,48 @@ The number of chars user needs to type for `onQuery` to be called.
 A component that will be rendered in the form and should contain the input field.
 It will be passed following props:
 
-##### `inputProps`
-The object containing input props that should be applied directly on the input 
+- `inputProps` - the object containing input props that should be applied directly on the input 
 element. It contains the following fields:
 `value` `onChange` `onFocus` `onBlur` `onKeyDown` `autoComplete` `ref`.
 
-##### `selectedItem`
-An item from `onQuery` result array, which is currently selected.
+- `selectedItem` - an item from `onQuery` result array, which is currently selected.
 
-##### `isFetching: boolean`
-A flag indicating that the autocomplete is fetching. 
+- `isFetching: boolean` - a flag indicating that the autocomplete is fetching. NOTE: For 
+better ux, it is also `true` if there *will* be a request, i.e. after the user started to 
+type but before the request sent.
 
-NOTE: For better ux, it is also `true` if there *will* be a request, i.e. after 
-the user started to type but before the request sent.
+- `isOpen: boolean` - whether the list is shown or not.
 
-##### `isOpen: boolean`
-Whether the list is shown or not.
+- `submit: () => void` - a callback to trigger submit.
 
-##### `submit: () => void`
-A callback to trigger submit.
-
-##### `reset: () => void`
-A callback reset user input.
+- `reset: () => void` - a callback reset user input.
 
 #### `listContainerComponent`
 A component that will be rendered in the form and contains all other components 
 except `inputComponent`.
 It will be passed following props:
 
-##### `containerProps`
-The object containing props that should be applied directly on the container 
+- `containerProps` - the object containing props that should be applied directly on the container 
 element. It contains the following fields:
 `onMouseLeave`.
 
-##### `selectedItem`
-Same as in `inputComponent`.
+- `selectedItem` - same as in `inputComponent`.
 
-##### `isFetching: boolean`
-Same as in `inputComponent`.
+- `isFetching: boolean` - same as in `inputComponent`.
 
-##### `isOpen: boolean`
-Same as in `inputComponent`.
+- `isOpen: boolean` - same as in `inputComponent`.
 
-##### `submit: () => void`
-Same as in `inputComponent`.
+- `submit: () => void` - same as in `inputComponent`.
 
 #### `listComponent`
 A component holding the suggestions. Renders inside `listContainerComponent`.
 Will be passed the following:
 
-##### `suggestions`
-Suggestions array from `onQuery`.
+- `suggestions` - suggestions array from `onQuery`.
 
-##### `selectedId`
-An id of the currently selected suggestion.
+- `selectedId` - an id of the currently selected suggestion.
 
-##### `suggestionHandlers: { onMouseDown: (id) => void, onMouseOver: (id) => void }`
-These handlers should be called with an id of the suggestion whenever the item's 
+- `suggestionHandlers: { onMouseDown: (id) => void, onMouseOver: (id) => void }` - these handlers should be called with an id of the suggestion whenever the item's 
 original `onMouseDown` and `onMouseOver` are called.
 
 #### `minCharsComponent`
