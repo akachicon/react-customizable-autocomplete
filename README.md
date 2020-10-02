@@ -1,5 +1,5 @@
 # react-customizable-autocomplete
-A library to create search with autocomplete. [Demo](https://akachicon.github.com/react-customizable-autocomplete).
+A library to create search with autocomplete. [Demo](https://akachicon.github.io/react-customizable-autocomplete).
 
 ## Requirements
 This package requires ```Promise``` to be available globally, it is not bundled as 

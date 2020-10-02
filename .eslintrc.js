@@ -82,7 +82,7 @@ const tsConfig = {
 
 module.exports = {
   root: true,
-  ignorePatterns: ['node_modules/**/*', 'dist/**/*', '**/*.d.ts'],
+  ignorePatterns: ['node_modules/**/*', 'dist/**/*', '**/*.d.ts', 'docs/**/*'],
   extends: [
     'eslint:recommended',
     'prettier', // disable general eslint rules that can conflict with prettier
