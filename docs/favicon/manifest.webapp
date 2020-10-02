@@ -1,0 +1,14 @@
+{
+  "version": "1.0.0",
+  "name": "react-customizable-autocomplete",
+  "description": "react single page application config",
+  "icons": {
+    "60": "favicon/firefox_app_60x60.png",
+    "128": "favicon/firefox_app_128x128.png",
+    "512": "favicon/firefox_app_512x512.png"
+  },
+  "developer": {
+    "name": "Zharenko Denis",
+    "url": null
+  }
+}
