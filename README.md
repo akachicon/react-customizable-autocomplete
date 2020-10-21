@@ -111,7 +111,7 @@ type but before the request sent.
 
 - `submit: () => void` - a callback to trigger submit.
 
-- `reset: () => void` - a callback reset user input.
+- `reset: () => void` - a callback reset to user input.
 
 #### `listContainerComponent`
 A component that will be rendered in the form and contains all other components 
